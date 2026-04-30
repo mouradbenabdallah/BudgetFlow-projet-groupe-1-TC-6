@@ -1,0 +1,68 @@
+services:
+  php:
+    # Service PHP-FPM : exécute le code PHP natif de l'application.
+    build:
+      context: .
+      dockerfile: docker/php.Dockerfile
+    container_name: budgetflow_php
+    restart: unless-stopped
+    environment:
+      # Ces variables sont lues par config/config.php avec getenv().
+      APP_ENV: local
+      APP_URL: http://localhost:8000
+      APP_TIMEZONE: Africa/Tunis
+      # DB_HOST pointe vers le service Compose "postgres", pas vers localhost.
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: budgetflow
+      DB_USER: budgetflow
+      DB_PASSWORD: budgetflow
+    volumes:
+      # Monte le code local dans le conteneur pour voir les changements sans reconstruire.
+      - .:/var/www/html
+    depends_on:
+      - postgres
+    networks:
+      - budgetflow
+
+  nginx:
+    # Service web public : reçoit http://localhost:8000 et transmet les PHP à PHP-FPM.
+    image: nginx:1.25-alpine
+    container_name: budgetflow_nginx
+    restart: unless-stopped
+    ports:
+      # Port hôte 8000 -> port 80 du conteneur Nginx.
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+      # Configuration Nginx du projet.
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - php
+    networks:
+      - budgetflow
+
+  postgres:
+    # Base PostgreSQL 16. Le port 5432 n'est pas exposé pour éviter les conflits locaux.
+    image: postgres:16-alpine
+    container_name: budgetflow_postgres
+    restart: unless-stopped
+    environment:
+      # Identifiants initiaux de la base. Ils doivent correspondre à DB_* côté PHP.
+      POSTGRES_DB: budgetflow
+      POSTGRES_USER: budgetflow
+      POSTGRES_PASSWORD: budgetflow
+    volumes:
+      # Volume persistant : garde les données même après docker compose down.
+      - postgres_data:/var/lib/postgresql/data
+      # Script exécuté uniquement au premier démarrage du volume PostgreSQL.
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    networks:
+      - budgetflow
+
+networks:
+  budgetflow:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -420,7 +420,7 @@ BudgetFlow envoie des emails automatiques via **PHPMailer + Resend SMTP** pour :
 |:---:|:---:|
 | **Mourad Ben Abdallah** | **Aziz Ben Hmida** |
 | Backend · Auth · Categories · Emails | Frontend · Dashboard · Transactions · Admin |
-| [![GitHub](https://img.shields.io/badge/GitHub-mouradbenabdallah-181717?style=flat&logo=github)](https://github.com/mouradbenabdallah) | [![GitHub](https://img.shields.io/badge/GitHub-azizbenhmida-181717?style=flat&logo=github)](https://github.com/azizbenhmida) |
+| [![GitHub](https://img.shields.io/badge/GitHub-mouradbenabdallah-181717?style=flat&logo=github)](https://github.com/mouradbenabdallah) | [![GitHub](https://img.shields.io/badge/GitHub-Aziz481450-181717?style=flat&logo=github)](https://github.com/Aziz481450) |
 
 <br/>
 
@@ -450,7 +450,7 @@ Ce projet suit le **modèle de développement en cascade (Waterfall)** :
 
 <br/>
 
-**BudgetFlow** — Projet Semestriel · ITEAM University · 2024–2025
+**BudgetFlow** — Projet Semestriel · ITEAM University · 2025–2026
 
 Mourad Ben Abdallah & Aziz Ben Hmida*
 

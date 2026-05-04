@@ -19,11 +19,11 @@ BudgetFlow utilise une architecture MVC PHP native :
 
 Le fichier `docker-compose.yml` démarre trois services :
 
-| Service | Rôle |
-| --- | --- |
-| `nginx` | Serveur web public sur `http://localhost:8000` |
-| `php` | Exécute le code PHP avec PHP-FPM |
-| `postgres` | Base de données PostgreSQL 16 |
+| Service    | Rôle                                           |
+| ---------- | ---------------------------------------------- |
+| `nginx`    | Serveur web public sur `http://localhost:8000` |
+| `php`      | Exécute le code PHP avec PHP-FPM               |
+| `postgres` | Base de données PostgreSQL 16                  |
 
 Important : PostgreSQL n'expose plus le port `5432` sur ton Linux. C'est volontaire pour éviter le conflit avec un PostgreSQL déjà installé sur la machine. PHP se connecte à PostgreSQL via le réseau Docker interne avec le host `postgres`.
 
@@ -185,3 +185,17 @@ Si PostgreSQL n'est pas lancé :
 ```bash
 docker compose logs postgres
 ```
+
+docker compose up --build -d
+docker compose exec -T postgres psql -U budgetflow -d budgetflow < database/seed_dashboard.sql
+Then open:
+
+text
+
+http://localhost:8000/login
+Use:
+
+text
+
+Email: demo@budgetflow.local
+Password: password

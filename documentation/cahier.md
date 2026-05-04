@@ -138,7 +138,7 @@ Deux rôles :
 - Répartition par catégorie (graphique Chart.js)
 - Évolution dans le temps (graphique Chart.js)
 
-### 4.9 Emails (PHPMailer + Resend)
+### 4.9 Emails (PHPMailer +gmail default mail)
 - Validation de compte par admin
 - Invitation budget partagé
 - Alerte dépassement budget

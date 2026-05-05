@@ -66,22 +66,6 @@ $pageTitle = htmlspecialchars(($title ?? 'Authentification') . ' - BudgetFlow', 
         </section>
     </main>
 
-    <script>
-        document.querySelectorAll('[data-password-toggle]').forEach(function (button) {
-            button.addEventListener('click', function () {
-                var target = document.getElementById(button.getAttribute('data-password-toggle'));
-                if (!target) {
-                    return;
-                }
-
-                var isPassword = target.getAttribute('type') === 'password';
-                target.setAttribute('type', isPassword ? 'text' : 'password');
-                button.setAttribute('aria-label', isPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
-                button.innerHTML = isPassword
-                    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 3l18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10.58 10.58A2 2 0 0012 14a2 2 0 001.42-.58M9.88 5.09A9.77 9.77 0 0112 4c5 0 9 5 9 8a10.88 10.88 0 01-2.2 3.43M6.1 6.1C4.22 7.43 3 9.78 3 12c0 3 4 8 9 8a9.65 9.65 0 004.08-.93" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-                    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>';
-            });
-        });
-    </script>
+    <script src="/script.js"></script>
 </body>
 </html>

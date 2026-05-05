@@ -162,6 +162,10 @@ class AuthController
 
     public function logout(): void
     {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            CSRF::validateToken((string) ($_POST['csrf_token'] ?? ''));
+        }
+
         $this->session->destroy();
         $this->redirect('/login');
     }

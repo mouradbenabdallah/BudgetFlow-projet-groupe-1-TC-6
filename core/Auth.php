@@ -33,11 +33,21 @@ class Auth
         self::requireLogin();
 
         $user = self::getUser();
-        if ($user !== null && $user['role'] === $role) {
+        if ($user === null) {
+            self::redirect('/login');
+        }
+
+        $userRole = $user['role'] ?? 'user';
+
+        if ($userRole === $role) {
             return;
         }
 
-        if ($user !== null && $user['role'] === 'admin') {
+        if ($role === 'user' && $userRole === 'admin') {
+            return;
+        }
+
+        if ($userRole === 'admin') {
             self::redirect('/admin');
         }
 

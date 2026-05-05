@@ -16,7 +16,10 @@ $name = htmlspecialchars($user['name'] ?? 'Utilisateur', ENT_QUOTES, 'UTF-8');
         <div class="card shadow-sm">
             <div class="card-body d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
                 <h1 class="h4 mb-0">Dashboard — <?= $name ?></h1>
-                <a class="btn btn-outline-danger" href="/logout">Déconnexion</a>
+                <form method="post" action="/logout" style="margin:0;">
+                    <?= CSRF::getTokenField() ?>
+                    <button type="submit" class="btn btn-outline-danger">Déconnexion</button>
+                </form>
             </div>
         </div>
     </main>

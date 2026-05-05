@@ -43,7 +43,7 @@ services:
       - budgetflow
 
   postgres:
-    # Base PostgreSQL 16. Le port 5432 n'est pas exposé pour éviter les conflits locaux.
+    # Base PostgreSQL 16. Le port 5432 est exposé pour Beekeeper et autres outils.
     image: postgres:16-alpine
     container_name: budgetflow_postgres
     restart: unless-stopped
@@ -52,6 +52,9 @@ services:
       POSTGRES_DB: budgetflow
       POSTGRES_USER: budgetflow
       POSTGRES_PASSWORD: budgetflow
+    ports:
+      # Port 5432 pour Beekeeper et outils externes
+      - "5432:5432"
     volumes:
       # Volume persistant : garde les données même après docker compose down.
       - postgres_data:/var/lib/postgresql/data

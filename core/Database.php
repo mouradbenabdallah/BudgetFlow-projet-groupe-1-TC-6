@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Database Singleton
+ *
+ * Provides a shared PDO instance with proper error handling.
+ */
 class Database
 {
     private static ?PDO $instance = null;
@@ -23,7 +28,6 @@ class Database
             $config = require __DIR__ . '/../config/config.php';
             $database = $config['database'];
 
-            // DSN PostgreSQL lu depuis config/config.php et les variables Docker.
             $dsn = sprintf(
                 'pgsql:host=%s;port=%s;dbname=%s',
                 $database['host'],
@@ -31,12 +35,22 @@ class Database
                 $database['name']
             );
 
-            // Une seule connexion PDO partagée, avec erreurs en exceptions et fetch en tableau associatif.
-            self::$instance = new PDO($dsn, $database['user'], $database['password'], [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ]);
+            try {
+                self::$instance = new PDO(
+                    $dsn,
+                    $database['user'],
+                    $database['password'],
+                    [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        PDO::ATTR_EMULATE_PREPARES => false,
+                    ]
+                );
+            } catch (PDOException $e) {
+                error_log('Database connection failed: ' . $e->getMessage());
+                http_response_code(503);
+                die('Service temporairement indisponible. Veuillez réessayer plus tard.');
+            }
         }
 
         return self::$instance;

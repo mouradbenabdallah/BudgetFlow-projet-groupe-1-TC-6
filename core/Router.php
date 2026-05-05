@@ -1,9 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * Exception thrown to halt execution after a redirect.
+ */
 class RedirectException extends RuntimeException
 {
 }
 
+/**
+ * Router
+ *
+ * Simple request dispatcher that maps HTTP method + path to
+ * callable handlers or controller class/method pairs.
+ */
 class Router
 {
     private array $routes = [
@@ -11,16 +22,32 @@ class Router
         'POST' => [],
     ];
 
+    /**
+     * Register a GET route.
+     *
+     * @param string $path URL path
+     * @param callable|array{0: class-string, 1: string} $handler Closure or [ControllerClass, 'method']
+     */
     public function get(string $path, callable|array $handler): void
     {
         $this->routes['GET'][$this->normalizePath($path)] = $handler;
     }
 
+    /**
+     * Register a POST route.
+     *
+     * @param string $path URL path
+     * @param callable|array{0: class-string, 1: string} $handler Closure or [ControllerClass, 'method']
+     */
     public function post(string $path, callable|array $handler): void
     {
         $this->routes['POST'][$this->normalizePath($path)] = $handler;
     }
 
+    /**
+     * Dispatch the current request to the matched route handler.
+     * Returns 404 if no route matches.
+     */
     public function dispatch(): void
     {
         $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
@@ -47,6 +74,12 @@ class Router
         }
     }
 
+    /**
+     * Invoke a route handler (closure or controller method).
+     *
+     * @param callable|array{0: class-string, 1: string} $handler The route handler
+     * @return mixed Handler response
+     */
     private function callHandler(callable|array $handler): mixed
     {
         if (is_array($handler) && isset($handler[0], $handler[1]) && is_string($handler[0])) {
@@ -58,6 +91,12 @@ class Router
         return call_user_func($handler);
     }
 
+    /**
+     * Normalize a URL path to a consistent format.
+     *
+     * @param string $path Raw URL path
+     * @return string Normalized path
+     */
     private function normalizePath(string $path): string
     {
         $path = '/' . trim($path, '/');

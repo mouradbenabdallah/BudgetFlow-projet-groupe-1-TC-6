@@ -25,11 +25,11 @@
 
 [![ITEAM University](https://img.shields.io/badge/ITEAM_University-Projet_Semestriel-6C63FF?style=for-the-badge)](https://iteam-u.tn)
 [![Groupe](https://img.shields.io/badge/Groupe_1-TC--6-22D3A5?style=for-the-badge)]()
-[![Année](https://img.shields.io/badge/Année-2024--2025-FFB547?style=for-the-badge)]()
+[![Année](https://img.shields.io/badge/Année-2025--2026-FFB547?style=for-the-badge)]()
 
 <br/>
 
-> *« Gérez votre argent intelligemment. Ensemble. »*
+> _« Gérez votre argent intelligemment. Ensemble. »_
 
 <br/>
 
@@ -57,12 +57,12 @@
 
 ### 🔍 Problème résolu
 
-| ❌ Problème | ✅ Solution BudgetFlow |
-|------------|----------------------|
-| Outils financiers trop complexes | Interface simple et intuitive |
-| Pas de gestion collaborative | Budgets partagés multi-utilisateurs |
-| Aucune alerte de dépassement | Notifications visuelles + emails automatiques |
-| Données dispersées | Tableau de bord centralisé avec graphiques |
+| ❌ Problème                      | ✅ Solution BudgetFlow                        |
+| -------------------------------- | --------------------------------------------- |
+| Outils financiers trop complexes | Interface simple et intuitive                 |
+| Pas de gestion collaborative     | Budgets partagés multi-utilisateurs           |
+| Aucune alerte de dépassement     | Notifications visuelles + emails automatiques |
+| Données dispersées               | Tableau de bord centralisé avec graphiques    |
 
 ### 🎓 Contexte académique
 
@@ -209,21 +209,21 @@ budgetflow/
 
 ### 🔄 Routing
 
-| Méthode | Route | Description | Rôle requis |
-|---------|-------|-------------|-------------|
-| `GET` | `/login` | Page de connexion | — |
-| `POST` | `/login` | Traitement connexion | — |
-| `GET` | `/register` | Page d'inscription | — |
-| `POST` | `/register` | Traitement inscription | — |
-| `GET` | `/dashboard` | Tableau de bord | `user` |
-| `GET` | `/budgets` | Liste des budgets | `user` |
-| `POST` | `/budgets/create` | Créer un budget | `user` |
-| `GET` | `/transactions` | Liste transactions | `user` |
-| `POST` | `/transactions/create` | Créer une transaction | `user` |
-| `GET` | `/categories` | Gestion catégories | `user` |
-| `GET` | `/profile` | Profil utilisateur | `user` |
-| `GET` | `/admin` | Panneau admin | `admin` |
-| `GET` | `/logout` | Déconnexion | `user` / `admin` |
+| Méthode | Route                  | Description            | Rôle requis      |
+| ------- | ---------------------- | ---------------------- | ---------------- |
+| `GET`   | `/login`               | Page de connexion      | —                |
+| `POST`  | `/login`               | Traitement connexion   | —                |
+| `GET`   | `/register`            | Page d'inscription     | —                |
+| `POST`  | `/register`            | Traitement inscription | —                |
+| `GET`   | `/dashboard`           | Tableau de bord        | `user`           |
+| `GET`   | `/budgets`             | Liste des budgets      | `user`           |
+| `POST`  | `/budgets/create`      | Créer un budget        | `user`           |
+| `GET`   | `/transactions`        | Liste transactions     | `user`           |
+| `POST`  | `/transactions/create` | Créer une transaction  | `user`           |
+| `GET`   | `/categories`          | Gestion catégories     | `user`           |
+| `GET`   | `/profile`             | Profil utilisateur     | `user`           |
+| `GET`   | `/admin`               | Panneau admin          | `admin`          |
+| `GET`   | `/logout`              | Déconnexion            | `user` / `admin` |
 
 ---
 
@@ -274,15 +274,15 @@ budgetflow/
 
 ### 🏷️ Catégories par défaut
 
-| Catégorie | Couleur |
-|-----------|---------|
+| Catégorie       | Couleur   |
+| --------------- | --------- |
 | 🛒 Alimentation | `#22D3A5` |
-| 🚗 Transport | `#60A5FA` |
-| 🏠 Logement | `#F472B6` |
-| ❤️ Santé | `#FF6B6B` |
-| 🎮 Loisirs | `#FFB547` |
-| 📚 Études | `#A78BFA` |
-| 📦 Autre | `#8B90A7` |
+| 🚗 Transport    | `#60A5FA` |
+| 🏠 Logement     | `#F472B6` |
+| ❤️ Santé        | `#FF6B6B` |
+| 🎮 Loisirs      | `#FFB547` |
+| 📚 Études       | `#A78BFA` |
+| 📦 Autre        | `#8B90A7` |
 
 ---
 
@@ -344,19 +344,19 @@ docker compose exec postgres psql -U budgetflow -d budgetflow \
 
 <div align="center">
 
-| Page de connexion | Tableau de bord |
-|:-----------------:|:---------------:|
+|         Page de connexion         |              Tableau de bord              |
+| :-------------------------------: | :---------------------------------------: |
 | ![Login](images/screen_login.png) | ![Dashboard](images/screen_dashboard.png) |
 
-| Gestion des budgets | Panneau d'administration |
-|:-------------------:|:------------------------:|
+|          Gestion des budgets          |     Panneau d'administration      |
+| :-----------------------------------: | :-------------------------------: |
 | ![Budgets](images/screen_budgets.png) | ![Admin](images/screen_admin.png) |
 
-| Gestion des transactions | Catégories |
-|:------------------------:|:----------:|
+|            Gestion des transactions             |                 Catégories                  |
+| :---------------------------------------------: | :-----------------------------------------: |
 | ![Transactions](images/screen_transactions.png) | ![Categories](images/screen_categories.png) |
 
-> 📌 *Les captures seront ajoutées après finalisation de l'interface.*
+> 📌 _Les captures seront ajoutées après finalisation de l'interface._
 
 </div>
 
@@ -383,30 +383,30 @@ BudgetFlow implémente les bonnes pratiques de sécurité web :
 
 BudgetFlow envoie des emails automatiques via **PHPMailer + Resend SMTP** pour :
 
-| Événement | Destinataire |
-|-----------|-------------|
-| ✅ Validation de compte | Utilisateur |
-| 📨 Invitation budget partagé | Membre invité |
-| ⚠️ Budget à 80% | Membres du budget |
-| 🚨 Budget dépassé | Membres du budget |
-| 🗑️ Demande de suppression | Administrateur(s) |
-| ✅ Confirmation suppression | Utilisateur |
-| 📊 Récapitulatif mensuel | Tous les utilisateurs actifs |
+| Événement                    | Destinataire                 |
+| ---------------------------- | ---------------------------- |
+| ✅ Validation de compte      | Utilisateur                  |
+| 📨 Invitation budget partagé | Membre invité                |
+| ⚠️ Budget à 80%              | Membres du budget            |
+| 🚨 Budget dépassé            | Membres du budget            |
+| 🗑️ Demande de suppression    | Administrateur(s)            |
+| ✅ Confirmation suppression  | Utilisateur                  |
+| 📊 Récapitulatif mensuel     | Tous les utilisateurs actifs |
 
 ---
 
 ## 🛠️ Stack technique
 
-| Couche | Technologie | Version |
-|--------|------------|---------|
-| **Frontend** | HTML5 + Bootstrap | 5.3.2 |
-| **JavaScript** | Vanilla JS + Chart.js | ES6+ |
-| **Backend** | PHP natif (MVC maison) | 8.3 |
-| **Base de données** | PostgreSQL | 16 |
-| **Serveur web** | Nginx | Alpine |
-| **Conteneurisation** | Docker + Compose | v2 |
-| **Emails** | PHPMailer + google mail | — |
-| **Architecture** | MVC sans framework | — |
+| Couche               | Technologie             | Version |
+| -------------------- | ----------------------- | ------- |
+| **Frontend**         | HTML5 + Bootstrap       | 5.3.2   |
+| **JavaScript**       | Vanilla JS + Chart.js   | ES6+    |
+| **Backend**          | PHP natif (MVC maison)  | 8.3     |
+| **Base de données**  | PostgreSQL              | 16      |
+| **Serveur web**      | Nginx                   | Alpine  |
+| **Conteneurisation** | Docker + Compose        | v2      |
+| **Emails**           | PHPMailer + google mail | —       |
+| **Architecture**     | MVC sans framework      | —       |
 
 ---
 
@@ -416,10 +416,10 @@ BudgetFlow envoie des emails automatiques via **PHPMailer + Resend SMTP** pour :
 
 <br/>
 
-| <img src="https://github.com/mouradbenabdallah.png" width="80" style="border-radius:50%"/> | <img src="https://github.com/identicon.png" width="80" style="border-radius:50%"/> |
-|:---:|:---:|
-| **Mourad Ben Abdallah** | **Aziz Ben Hmida** |
-| Backend · Auth · Categories · Emails | Frontend · Dashboard · Transactions · Admin |
+|                       <img src="https://github.com/mouradbenabdallah.png" width="80" style="border-radius:50%"/>                       |                    <img src="https://github.com/identicon.png" width="80" style="border-radius:50%"/>                    |
+| :------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: |
+|                                                        **Mourad Ben Abdallah**                                                         |                                                    **Aziz Ben Hmida**                                                    |
+|                                                  Backend · Auth · Categories · Emails                                                  |                                       Frontend · Dashboard · Transactions · Admin                                        |
 | [![GitHub](https://img.shields.io/badge/GitHub-mouradbenabdallah-181717?style=flat&logo=github)](https://github.com/mouradbenabdallah) | [![GitHub](https://img.shields.io/badge/GitHub-Aziz481450-181717?style=flat&logo=github)](https://github.com/Aziz481450) |
 
 <br/>
@@ -452,7 +452,7 @@ Ce projet suit le **modèle de développement en cascade (Waterfall)** :
 
 **BudgetFlow** — Projet Semestriel · ITEAM University · 2025–2026
 
-Mourad Ben Abdallah & Aziz Ben Hmida*
+Mourad Ben Abdallah & Aziz Ben Hmida\*
 
 <br/>
 

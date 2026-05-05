@@ -1,10 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * Dashboard Controller
+ *
+ * Renders the main user dashboard with financial summaries,
+ * budget progress, recent transactions, and category breakdowns.
+ */
 class DashboardController
 {
     private ?Budget $budgets = null;
     private ?Transaction $transactions = null;
 
+    /**
+     * Display the dashboard with aggregated financial data.
+     */
     public function index(): void
     {
         Auth::requireRole('user');
@@ -37,6 +48,12 @@ class DashboardController
         ]);
     }
 
+    /**
+     * Build budget summary data with spending percentages and status indicators.
+     *
+     * @param int $userId The user ID
+     * @return array<array<string, mixed>> Budget summary records
+     */
     private function buildBudgets(int $userId): array
     {
         $budgets = [];
@@ -67,6 +84,13 @@ class DashboardController
         return $budgets;
     }
 
+    /**
+     * Build monthly evolution data for the last 6 months.
+     * Fills gaps with zero values for months without transactions.
+     *
+     * @param int $userId The user ID
+     * @return array<array<string, mixed>> Monthly evolution records
+     */
     private function buildMonthlyEvolution(int $userId): array
     {
         $indexedRows = [];
@@ -110,6 +134,12 @@ class DashboardController
         return $evolution;
     }
 
+    /**
+     * Render a view within the authenticated layout.
+     *
+     * @param string $view View file path (relative to app/views/)
+     * @param array<string, mixed> $data Variables to extract into the view
+     */
     private function render(string $view, array $data = []): void
     {
         extract($data, EXTR_SKIP);
@@ -121,6 +151,11 @@ class DashboardController
         require __DIR__ . '/../views/layouts/app.php';
     }
 
+    /**
+     * Lazy-load the Budget model instance.
+     *
+     * @return Budget
+     */
     private function budgets(): Budget
     {
         if ($this->budgets === null) {
@@ -130,6 +165,11 @@ class DashboardController
         return $this->budgets;
     }
 
+    /**
+     * Lazy-load the Transaction model instance.
+     *
+     * @return Transaction
+     */
     private function transactions(): Transaction
     {
         if ($this->transactions === null) {

@@ -33,10 +33,9 @@ $mainNavigation = [
 $accountNavigation = [
     ['path' => '/notifications', 'label' => 'Notifications', 'icon' => 'bi-bell'],
     ['path' => '/profile', 'label' => 'Profil', 'icon' => 'bi-person'],
-    ['path' => '/admin', 'label' => 'Admin', 'icon' => 'bi-shield-check'],
     ['path' => '/settings', 'label' => 'Paramètres', 'icon' => 'bi-gear'],
-    ['path' => '/logout', 'label' => 'Déconnexion', 'icon' => 'bi-box-arrow-left'],
 ];
+$isAdmin = ($sidebarUser['role'] ?? 'user') === 'admin';
 ?>
 
 <aside class="bf-sidebar" aria-label="Navigation principale">
@@ -46,7 +45,7 @@ $accountNavigation = [
     </a>
 
     <nav class="bf-sidebar-nav" aria-label="Menu principal">
-        <span class="bf-sidebar-section-label">Menu principal</span>
+        <span class="bf-sidebar-section-label">MENU PRINCIPAL</span>
         <?php foreach ($mainNavigation as $item): ?>
             <?php $activeClass = $isActive($item['path']); ?>
             <a
@@ -61,7 +60,7 @@ $accountNavigation = [
     </nav>
 
     <nav class="bf-sidebar-nav bf-sidebar-account" aria-label="Compte">
-        <span class="bf-sidebar-section-label">Compte</span>
+        <span class="bf-sidebar-section-label">COMPTE</span>
         <?php foreach ($accountNavigation as $item): ?>
             <?php $activeClass = $isActive($item['path']); ?>
             <a
@@ -73,6 +72,24 @@ $accountNavigation = [
                 <span><?= $escape($item['label']) ?></span>
             </a>
         <?php endforeach; ?>
+        <?php if ($isAdmin): ?>
+            <?php $activeClass = $isActive('/admin'); ?>
+            <a
+                class="bf-sidebar-link <?= $escape($activeClass) ?>"
+                href="/admin"
+                <?= $activeClass !== '' ? 'aria-current="page"' : '' ?>
+            >
+                <i class="bi bi-shield-check" aria-hidden="true"></i>
+                <span>Admin</span>
+            </a>
+        <?php endif; ?>
+        <form method="post" action="/logout" style="margin:0;">
+            <?= CSRF::getTokenField() ?>
+            <button type="submit" class="bf-sidebar-link" style="width:100%;text-align:left;cursor:pointer;">
+                <i class="bi bi-box-arrow-left" aria-hidden="true"></i>
+                <span>Déconnexion</span>
+            </button>
+        </form>
     </nav>
 
     <div class="bf-sidebar-footer">

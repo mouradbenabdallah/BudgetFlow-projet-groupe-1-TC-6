@@ -32,10 +32,10 @@ $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'),
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="/style.css?v=1" rel="stylesheet">
+    <link href="/style.css?v=2" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 </head>
-<body class="bf-page-dashboard">
+<body class="bf-page-app">
     <div class="bf-app-shell">
         <?php require __DIR__ . '/../partials/sidebar.php'; ?>
 
@@ -59,6 +59,13 @@ $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'),
                     </button>
 
                     <span class="bf-top-avatar" aria-label="Utilisateur connecté"><?= $safeInitials ?></span>
+
+                    <form method="post" action="/logout" style="margin:0;">
+                        <?= CSRF::getTokenField() ?>
+                        <button type="submit" class="bf-btn bf-btn-logout" aria-label="Déconnexion">
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </form>
                 </div>
             </header>
 

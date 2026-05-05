@@ -49,7 +49,6 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
 
                 <div class="bf-hero-actions">
                     <a class="bf-btn bf-btn-primary" href="/register">Commencer Gratuitement →</a>
-                    <a class="bf-btn" href="/dashboard">Voir la Démo →</a>
                 </div>
 
                 <div class="bf-dashboard" aria-label="Aperçu du tableau de bord BudgetFlow">

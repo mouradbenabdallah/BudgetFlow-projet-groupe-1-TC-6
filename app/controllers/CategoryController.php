@@ -1,5 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * Category Controller
+ *
+ * Handles CRUD operations for categories.
+ * Users can create personal categories; default (global) categories are read-only.
+ * Categories can only be edited/deleted by their owner.
+ */
 class CategoryController
 {
     private ?Category $categories = null;
@@ -10,6 +19,10 @@ class CategoryController
         $this->session = new Session();
     }
 
+    /**
+     * Display the categories listing page.
+     * Shows all global and personal categories with aggregated stats.
+     */
     public function index(): void
     {
         Auth::requireRole('user');
@@ -19,8 +32,14 @@ class CategoryController
         $categoryState = $this->consumeFormState('category_form');
         $allCategories = $this->categories()->findAllForUser($userId);
 
-        $defaultCategories = array_values(array_filter($allCategories, static fn (array $category): bool => !empty($category['is_default'])));
-        $personalCategories = array_values(array_filter($allCategories, static fn (array $category): bool => empty($category['is_default']) && (int) ($category['user_id'] ?? 0) === $userId));
+        $defaultCategories = array_values(array_filter(
+            $allCategories,
+            static fn (array $category): bool => !empty($category['is_default'])
+        ));
+        $personalCategories = array_values(array_filter(
+            $allCategories,
+            static fn (array $category): bool => empty($category['is_default']) && (int) ($category['user_id'] ?? 0) === $userId
+        ));
 
         $totalCategories = count($allCategories);
         $expenseCategories = 0;
@@ -52,6 +71,9 @@ class CategoryController
         ]);
     }
 
+    /**
+     * Handle category creation via POST.
+     */
     public function create(): void
     {
         Auth::requireRole('user');
@@ -84,6 +106,10 @@ class CategoryController
         $this->redirect('/categories');
     }
 
+    /**
+     * Handle category update via POST.
+     * Only the owner of a personal category can edit it.
+     */
     public function edit(): void
     {
         Auth::requireRole('user');
@@ -135,6 +161,10 @@ class CategoryController
         $this->redirect('/categories');
     }
 
+    /**
+     * Handle category deletion via POST.
+     * Referenced transactions are kept but lose their category (ON DELETE SET NULL).
+     */
     public function delete(): void
     {
         Auth::requireRole('user');
@@ -182,20 +212,35 @@ class CategoryController
         $this->redirect('/categories');
     }
 
+    /**
+     * Infer whether a category is primarily used for income or expenses.
+     *
+     * Uses separate income/expense totals from the Category model query.
+     * If both are zero, defaults to 'expense'.
+     *
+     * @param array<string, mixed> $category Category record with total_income/total_expense
+     * @return string 'income' or 'expense'
+     */
     private function inferCategoryType(array $category): string
     {
-        $count = (int) ($category['transaction_count'] ?? 0);
-        $total = (float) ($category['total'] ?? 0);
+        $totalIncome = (float) ($category['total_income'] ?? 0);
+        $totalExpense = (float) ($category['total_expense'] ?? 0);
 
-        if ($count === 0) {
+        if ($totalIncome === 0.0 && $totalExpense === 0.0) {
             return 'expense';
         }
 
-        $avg = $total / $count;
-
-        return $avg >= 0 ? 'income' : 'expense';
+        return $totalIncome >= $totalExpense ? 'income' : 'expense';
     }
 
+    /**
+     * Validate and sanitize category input data.
+     *
+     * @param array<string, mixed> $input Raw POST data
+     * @param int $userId Current user ID
+     * @param int|null $categoryId ID to ignore during duplicate check (for edits)
+     * @return array{0: array<string, mixed>, 1: array<string, string>} [payload, errors]
+     */
     private function validateCategoryInput(array $input, int $userId, ?int $categoryId = null): array
     {
         $errors = [];
@@ -224,6 +269,15 @@ class CategoryController
         ], []];
     }
 
+    /**
+     * Check if a category name already exists for the user.
+     * Case-insensitive comparison.
+     *
+     * @param int $userId Current user ID
+     * @param string $name Category name to check
+     * @param int|null $ignoreId Category ID to exclude (for edits)
+     * @return bool True if duplicate exists
+     */
     private function isDuplicateName(int $userId, string $name, ?int $ignoreId = null): bool
     {
         foreach ($this->categories()->findAllForUser($userId) as $category) {
@@ -243,6 +297,12 @@ class CategoryController
         return false;
     }
 
+    /**
+     * Normalize an ID value to a positive integer or null.
+     *
+     * @param mixed $value The raw value
+     * @return int|null Positive integer or null
+     */
     private function normalizeId(mixed $value): ?int
     {
         if ($value === null || $value === '' || !is_numeric($value)) {
@@ -254,6 +314,14 @@ class CategoryController
         return $integer > 0 ? $integer : null;
     }
 
+    /**
+     * Store form state in session for sticky forms (validation errors).
+     *
+     * @param string $key Session key
+     * @param string $mode 'create' or 'edit'
+     * @param array<string, mixed> $old Original input values
+     * @param array<string, string> $errors Validation errors
+     */
     private function storeFormState(string $key, string $mode, array $old, array $errors): void
     {
         $_SESSION[$key] = [
@@ -263,6 +331,12 @@ class CategoryController
         ];
     }
 
+    /**
+     * Retrieve and consume form state from session.
+     *
+     * @param string $key Session key
+     * @return array<string, mixed> Form state or empty array
+     */
     private function consumeFormState(string $key): array
     {
         $state = $_SESSION[$key] ?? [];
@@ -275,6 +349,12 @@ class CategoryController
         return $state;
     }
 
+    /**
+     * Trim all string values in an array.
+     *
+     * @param array<string, mixed> $values Input array
+     * @return array<string, mixed> Sanitized array
+     */
     private function sanitizeArray(array $values): array
     {
         $sanitized = [];
@@ -285,6 +365,12 @@ class CategoryController
         return $sanitized;
     }
 
+    /**
+     * Render a view within the authenticated layout.
+     *
+     * @param string $view View file path (relative to app/views/)
+     * @param array<string, mixed> $data Variables to extract into the view
+     */
     private function render(string $view, array $data = []): void
     {
         extract($data, EXTR_SKIP);
@@ -296,12 +382,23 @@ class CategoryController
         require __DIR__ . '/../views/layouts/app.php';
     }
 
+    /**
+     * Perform an HTTP 302 redirect.
+     * Throws RedirectException to halt execution.
+     *
+     * @param string $path Target URL path
+     */
     private function redirect(string $path): void
     {
         header('Location: ' . $path, true, 302);
         throw new RedirectException();
     }
 
+    /**
+     * Lazy-load the Category model instance.
+     *
+     * @return Category
+     */
     private function categories(): Category
     {
         if ($this->categories === null) {

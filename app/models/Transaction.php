@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * Transaction Model
+ *
+ * Handles all database operations for transactions including
+ * filtering, aggregation, and CRUD operations.
+ */
 class Transaction
 {
     private PDO $pdo;
@@ -9,6 +17,13 @@ class Transaction
         $this->pdo = Database::getInstance();
     }
 
+    /**
+     * Fetch transactions for a user with optional filters.
+     *
+     * @param int $userId The user ID
+     * @param array|int $filters Filter array or limit integer
+     * @return array<array<string, mixed>> List of transaction records
+     */
     public function findByUser(int $userId, array|int $filters = []): array
     {
         if (is_int($filters)) {
@@ -98,11 +113,28 @@ class Transaction
         return $statement->fetchAll();
     }
 
+    /**
+     * Sum transactions by type for a user within a date range.
+     *
+     * @param int $userId The user ID
+     * @param string $type 'income' or 'expense'
+     * @param string $startDate Start date (YYYY-MM-DD)
+     * @param string $endDate End date (YYYY-MM-DD)
+     * @return float Total amount
+     */
     public function sumByType(int $userId, string $type, string $startDate, string $endDate): float
     {
         return $this->sumByTypeAndUser($userId, $type, $this->extractMonthFromRange($startDate, $endDate));
     }
 
+    /**
+     * Sum transactions by type and user for a specific month.
+     *
+     * @param int $userId The user ID
+     * @param string $type 'income' or 'expense'
+     * @param string $month Month in YYYY-MM format
+     * @return float Total amount
+     */
     public function sumByTypeAndUser(int $userId, string $type, string $month): float
     {
         if (!in_array($type, ['income', 'expense'], true)) {
@@ -138,6 +170,14 @@ class Transaction
         return (float) $statement->fetchColumn();
     }
 
+    /**
+     * Get expense breakdown by category for a user within a date range.
+     *
+     * @param int $userId The user ID
+     * @param string $startDate Start date (YYYY-MM-DD)
+     * @param string $endDate End date (YYYY-MM-DD)
+     * @return array<array<string, mixed>> Category breakdown with name, color, amount
+     */
     public function byCategory(int $userId, string $startDate, string $endDate): array
     {
         $statement = $this->pdo->prepare(
@@ -148,7 +188,8 @@ class Transaction
              LEFT JOIN categories c ON c.id = t.category_id
              WHERE t.user_id = :user_id
                AND t.type = 'expense'
-               AND t.date BETWEEN :start_date AND :end_date
+               AND t.date >= :start_date
+               AND t.date < (:end_date::date + 1)
              GROUP BY c.id, c.name, c.color
              ORDER BY amount DESC"
         );
@@ -160,6 +201,12 @@ class Transaction
         return $statement->fetchAll();
     }
 
+    /**
+     * Get monthly income/expense evolution for the last 6 months.
+     *
+     * @param int $userId The user ID
+     * @return array<array<string, mixed>> Monthly aggregation rows
+     */
     public function monthlyEvolution(int $userId): array
     {
         $statement = $this->pdo->prepare(
@@ -179,6 +226,13 @@ class Transaction
         return $statement->fetchAll();
     }
 
+    /**
+     * Count transactions for a user with filters.
+     *
+     * @param int $userId The user ID
+     * @param array<string, mixed> $filters Filter parameters
+     * @return int Transaction count
+     */
     public function countByUser(int $userId, array $filters = []): int
     {
         $normalized = $this->normalizeFilters($filters);
@@ -221,6 +275,12 @@ class Transaction
         return (int) $statement->fetchColumn();
     }
 
+    /**
+     * Create a new transaction.
+     *
+     * @param array{budget_id: int, user_id: int, category_id: int|null, type: string, amount: string, description: string|null, date: string} $data
+     * @return int The new transaction ID
+     */
     public function create(array $data): int
     {
         $statement = $this->pdo->prepare(
@@ -241,6 +301,12 @@ class Transaction
         return (int) $statement->fetchColumn();
     }
 
+    /**
+     * Find a single transaction by ID with joined budget and category data.
+     *
+     * @param int $id The transaction ID
+     * @return array<string, mixed>|null Transaction record or null
+     */
     public function findById(int $id): ?array
     {
         $statement = $this->pdo->prepare(
@@ -273,6 +339,13 @@ class Transaction
         return $transaction ?: null;
     }
 
+    /**
+     * Update an existing transaction.
+     *
+     * @param int $id The transaction ID
+     * @param array<string, mixed> $data Fields to update
+     * @return bool True on success
+     */
     public function update(int $id, array $data): bool
     {
         $statement = $this->pdo->prepare(
@@ -297,6 +370,12 @@ class Transaction
         return $statement->execute();
     }
 
+    /**
+     * Delete a transaction by ID.
+     *
+     * @param int $id The transaction ID
+     * @return bool True on success
+     */
     public function delete(int $id): bool
     {
         $statement = $this->pdo->prepare('DELETE FROM transactions WHERE id = :id');
@@ -305,6 +384,12 @@ class Transaction
         return $statement->execute();
     }
 
+    /**
+     * Normalize and validate filter parameters.
+     *
+     * @param array<string, mixed> $filters Raw filter input
+     * @return array<string, mixed> Normalized filters
+     */
     private function normalizeFilters(array $filters): array
     {
         $type = (string) ($filters['type'] ?? 'all');
@@ -333,6 +418,12 @@ class Transaction
         ];
     }
 
+    /**
+     * Normalize a value to a positive integer or null.
+     *
+     * @param mixed $value The raw value
+     * @return int|null Positive integer or null
+     */
     private function normalizePositiveInt(mixed $value): ?int
     {
         if ($value === null || $value === '' || !is_numeric($value)) {
@@ -344,6 +435,12 @@ class Transaction
         return $integer > 0 ? $integer : null;
     }
 
+    /**
+     * Normalize a month string to YYYY-MM format.
+     *
+     * @param string $month Raw month input
+     * @return string Normalized YYYY-MM or current month
+     */
     private function normalizeMonth(string $month): string
     {
         if (preg_match('/^\d{4}-\d{2}$/', $month) !== 1) {
@@ -353,6 +450,12 @@ class Transaction
         return $month;
     }
 
+    /**
+     * Resolve the start and end dates for a given month.
+     *
+     * @param string $month Month in YYYY-MM format
+     * @return array{start: string, end: string}|null Date range or null on failure
+     */
     private function resolveMonthRange(string $month): ?array
     {
         $date = DateTimeImmutable::createFromFormat('Y-m', $month);
@@ -369,6 +472,13 @@ class Transaction
         ];
     }
 
+    /**
+     * Extract the month from a date range (uses the start date).
+     *
+     * @param string $startDate Start date (YYYY-MM-DD)
+     * @param string $endDate End date (YYYY-MM-DD)
+     * @return string Month in YYYY-MM format
+     */
     private function extractMonthFromRange(string $startDate, string $endDate): string
     {
         $start = DateTimeImmutable::createFromFormat('Y-m-d', $startDate);
@@ -381,6 +491,13 @@ class Transaction
         return $start->format('Y-m');
     }
 
+    /**
+     * Bind a nullable string value to a PDO statement parameter.
+     *
+     * @param PDOStatement $statement The prepared statement
+     * @param string $key The parameter name (with colon prefix)
+     * @param string|null $value The value to bind
+     */
     private function bindNullableString(PDOStatement $statement, string $key, ?string $value): void
     {
         if ($value === null) {
@@ -391,6 +508,13 @@ class Transaction
         $statement->bindValue($key, $value, PDO::PARAM_STR);
     }
 
+    /**
+     * Bind a nullable integer value to a PDO statement parameter.
+     *
+     * @param PDOStatement $statement The prepared statement
+     * @param string $key The parameter name (with colon prefix)
+     * @param mixed $value The value to bind
+     */
     private function bindNullableInt(PDOStatement $statement, string $key, mixed $value): void
     {
         if ($value === null || $value === '') {

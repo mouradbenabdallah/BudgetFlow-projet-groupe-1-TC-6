@@ -101,4 +101,50 @@ $router->get('/admin', function (): void {
     require __DIR__ . '/../app/views/admin_placeholder.php';
 });
 
+// Sections en cours de développement.
+$router->get('/budgets/shared', function (): void {
+    Auth::requireRole('user');
+    $sectionTitle = 'Budgets partagés';
+    $sectionIcon = 'bi-people';
+    $sectionMessage = 'La gestion des budgets partagés sera bientôt disponible. Vous pourrez inviter des membres et suivre les dépenses communes.';
+    $pageTitle = $sectionTitle;
+    require __DIR__ . '/../app/views/section_placeholder.php';
+});
+
+$router->get('/analytics', function (): void {
+    Auth::requireRole('user');
+    $sectionTitle = 'Analyses';
+    $sectionIcon = 'bi-graph-up-arrow';
+    $sectionMessage = 'Les analyses avancées et les rapports détaillés seront bientôt disponibles.';
+    $pageTitle = $sectionTitle;
+    require __DIR__ . '/../app/views/section_placeholder.php';
+});
+
+$router->get('/notifications', function (): void {
+    Auth::requireRole('user');
+    $sectionTitle = 'Notifications';
+    $sectionIcon = 'bi-bell';
+    $sectionMessage = 'Le centre de notifications sera bientôt disponible pour vous alerter sur vos budgets.';
+    $pageTitle = $sectionTitle;
+    require __DIR__ . '/../app/views/section_placeholder.php';
+});
+
+$router->get('/profile', function (): void {
+    Auth::requireRole('user');
+    $sectionTitle = 'Profil';
+    $sectionIcon = 'bi-person';
+    $sectionMessage = 'La gestion du profil sera bientôt disponible.';
+    $pageTitle = $sectionTitle;
+    require __DIR__ . '/../app/views/section_placeholder.php';
+});
+
+$router->get('/settings', function (): void {
+    Auth::requireRole('user');
+    $sectionTitle = 'Paramètres';
+    $sectionIcon = 'bi-gear';
+    $sectionMessage = 'Les paramètres du compte seront bientôt disponibles.';
+    $pageTitle = $sectionTitle;
+    require __DIR__ . '/../app/views/section_placeholder.php';
+});
+
 $router->dispatch();

@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * Category Model
+ *
+ * Handles all database operations for the categories table.
+ * Categories can be global (user_id IS NULL) or personal (user_id = X).
+ */
 class Category
 {
     private PDO $pdo;
@@ -9,11 +17,20 @@ class Category
         $this->pdo = Database::getInstance();
     }
 
+    /**
+     * Fetch all categories available to a user (global + personal).
+     * Includes aggregated income/expense counts and totals.
+     *
+     * @param int $userId The user ID
+     * @return array<array<string, mixed>> List of category records
+     */
     public function findAllForUser(int $userId): array
     {
         $statement = $this->pdo->prepare(
             'SELECT c.id, c.user_id, c.name, c.color, c.is_default,
-                    COUNT(t.id) AS transaction_count,
+                    COALESCE(COUNT(t.id), 0) AS transaction_count,
+                    COALESCE(SUM(CASE WHEN t.type = \'income\' THEN t.amount ELSE 0 END), 0) AS total_income,
+                    COALESCE(SUM(CASE WHEN t.type = \'expense\' THEN t.amount ELSE 0 END), 0) AS total_expense,
                     COALESCE(SUM(t.amount), 0) AS total
              FROM categories c
              LEFT JOIN transactions t ON t.category_id = c.id
@@ -27,6 +44,12 @@ class Category
         return $statement->fetchAll();
     }
 
+    /**
+     * Find a single category by ID.
+     *
+     * @param int $id The category ID
+     * @return array<string, mixed>|null Category record or null
+     */
     public function findById(int $id): ?array
     {
         $statement = $this->pdo->prepare(
@@ -42,6 +65,12 @@ class Category
         return $row ?: null;
     }
 
+    /**
+     * Create a new personal category.
+     *
+     * @param array{name: string, color: string, user_id: int} $data
+     * @return int The new category ID
+     */
     public function create(array $data): int
     {
         $statement = $this->pdo->prepare(
@@ -59,6 +88,13 @@ class Category
         return (int) $statement->fetchColumn();
     }
 
+    /**
+     * Update category name and/or color.
+     *
+     * @param int $id The category ID
+     * @param array{name?: string|null, color?: string|null} $data Fields to update
+     * @return bool True on success
+     */
     public function update(int $id, array $data): bool
     {
         $statement = $this->pdo->prepare(
@@ -75,6 +111,12 @@ class Category
         return $statement->execute();
     }
 
+    /**
+     * Delete a category. Transactions referencing it will have category_id set to NULL.
+     *
+     * @param int $id The category ID
+     * @return bool True on success
+     */
     public function delete(int $id): bool
     {
         $statement = $this->pdo->prepare('DELETE FROM categories WHERE id = :id');
@@ -83,6 +125,12 @@ class Category
         return $statement->execute();
     }
 
+    /**
+     * Count transactions using a specific category.
+     *
+     * @param int $categoryId The category ID
+     * @return int Number of transactions
+     */
     public function isUsedInTransactions(int $categoryId): int
     {
         $statement = $this->pdo->prepare(
@@ -96,6 +144,13 @@ class Category
         return (int) $statement->fetchColumn();
     }
 
+    /**
+     * Bind a nullable string value to a PDO statement parameter.
+     *
+     * @param PDOStatement $statement The prepared statement
+     * @param string $key The parameter name (with colon prefix)
+     * @param string|null $value The value to bind
+     */
     private function bindNullableString(PDOStatement $statement, string $key, ?string $value): void
     {
         if ($value === null) {

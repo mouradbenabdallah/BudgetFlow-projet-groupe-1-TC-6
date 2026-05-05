@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * Budget Model
+ *
+ * Handles all database operations for the budgets table.
+ * Supports personal and shared budgets with member management.
+ */
 class Budget
 {
     private PDO $pdo;
@@ -9,9 +17,15 @@ class Budget
         $this->pdo = Database::getInstance();
     }
 
+    /**
+     * Fetch all budgets owned by or shared with a user.
+     * Pre-aggregates expenses to avoid duplicate sums on shared budgets.
+     *
+     * @param int $userId The user ID
+     * @return array<array<string, mixed>> List of budget records
+     */
     public function findByUser(int $userId): array
     {
-        // On pré-agrège les dépenses pour éviter les doublons sur les budgets partagés.
         $statement = $this->pdo->prepare(
             "SELECT b.id,
                     b.owner_id,
@@ -45,6 +59,12 @@ class Budget
         return $statement->fetchAll();
     }
 
+    /**
+     * Calculate total expenses for a specific budget.
+     *
+     * @param int $budgetId The budget ID
+     * @return float Total amount spent on expenses
+     */
     public function getTotalSpent(int $budgetId): float
     {
         $statement = $this->pdo->prepare(

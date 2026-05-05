@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * Transaction Controller
+ *
+ * Handles CRUD operations for transactions including listing,
+ * creation, editing, and deletion with full ownership validation.
+ */
 class TransactionController
 {
     private const PER_PAGE = 20;
@@ -14,6 +22,9 @@ class TransactionController
         $this->session = new Session();
     }
 
+    /**
+     * Display the transactions listing with filters and pagination.
+     */
     public function index(): void
     {
         Auth::requireRole('user');
@@ -54,6 +65,9 @@ class TransactionController
         ]);
     }
 
+    /**
+     * Display the transaction creation form.
+     */
     public function showCreate(): void
     {
         Auth::requireRole('user');
@@ -77,6 +91,9 @@ class TransactionController
         ]);
     }
 
+    /**
+     * Process transaction creation via POST.
+     */
     public function create(): void
     {
         Auth::requireRole('user');
@@ -103,6 +120,9 @@ class TransactionController
         $this->redirect('/transactions');
     }
 
+    /**
+     * Display the transaction edit form.
+     */
     public function showEdit(): void
     {
         Auth::requireRole('user');
@@ -146,6 +166,9 @@ class TransactionController
         ]);
     }
 
+    /**
+     * Process transaction update via POST.
+     */
     public function edit(): void
     {
         Auth::requireRole('user');
@@ -191,6 +214,9 @@ class TransactionController
         $this->redirect('/transactions');
     }
 
+    /**
+     * Process transaction deletion via POST.
+     */
     public function delete(): void
     {
         Auth::requireRole('user');
@@ -228,6 +254,14 @@ class TransactionController
         $this->redirect('/transactions');
     }
 
+    /**
+     * Validate and sanitize transaction input data.
+     *
+     * @param array<string, mixed> $input Raw POST data
+     * @param int $userId Current user ID
+     * @param int|null $transactionId Existing transaction ID (for edit ownership check)
+     * @return array{0: array<string, mixed>, 1: array<string, string>} [payload, errors]
+     */
     private function validateTransactionInput(array $input, int $userId, ?int $transactionId = null): array
     {
         $errors = [];
@@ -279,6 +313,11 @@ class TransactionController
         return [$payload, []];
     }
 
+    /**
+     * Read filter parameters from the query string.
+     *
+     * @return array<string, mixed> Normalized filter values
+     */
     private function readFiltersFromQuery(): array
     {
         return [
@@ -290,6 +329,14 @@ class TransactionController
         ];
     }
 
+    /**
+     * Verify a budget belongs to the user (owner or member).
+     *
+     * @param int $budgetId Budget ID to check
+     * @param int $userId User ID
+     * @param int|null $transactionId Existing transaction ID (allows keeping original budget on edit)
+     * @return bool True if the budget is accessible to the user
+     */
     private function budgetBelongsToUser(int $budgetId, int $userId, ?int $transactionId = null): bool
     {
         foreach ($this->budgets()->findByUser($userId) as $budget) {
@@ -310,6 +357,13 @@ class TransactionController
         return false;
     }
 
+    /**
+     * Verify a category belongs to the user or is a default category.
+     *
+     * @param int $categoryId Category ID to check
+     * @param int $userId User ID
+     * @return bool True if the category is accessible to the user
+     */
     private function categoryBelongsToUserOrDefault(int $categoryId, int $userId): bool
     {
         $category = $this->categories()->findById($categoryId);
@@ -324,6 +378,12 @@ class TransactionController
         return (int) ($category['user_id'] ?? 0) === $userId;
     }
 
+    /**
+     * Validate a date string is a valid calendar date not more than 1 year in the future.
+     *
+     * @param string $date Date in YYYY-MM-DD format
+     * @return bool True if valid
+     */
     private function isValidDate(string $date): bool
     {
         $parsed = DateTimeImmutable::createFromFormat('Y-m-d', $date);
@@ -336,6 +396,12 @@ class TransactionController
         return $parsed <= $limit;
     }
 
+    /**
+     * Normalize a month string to YYYY-MM format.
+     *
+     * @param string $month Raw month input
+     * @return string Normalized YYYY-MM or current month
+     */
     private function normalizeMonth(string $month): string
     {
         if (preg_match('/^\d{4}-\d{2}$/', $month) !== 1) {
@@ -345,6 +411,12 @@ class TransactionController
         return $month;
     }
 
+    /**
+     * Normalize an ID value to a positive integer or null.
+     *
+     * @param mixed $value The raw value
+     * @return int|null Positive integer or null
+     */
     private function normalizeId(mixed $value): ?int
     {
         if ($value === null || $value === '' || !is_numeric($value)) {
@@ -356,6 +428,13 @@ class TransactionController
         return $integer > 0 ? $integer : null;
     }
 
+    /**
+     * Store form state in session for sticky forms (validation errors).
+     *
+     * @param string $key Session key
+     * @param array<string, mixed> $old Original input values
+     * @param array<string, string> $errors Validation errors
+     */
     private function storeFormState(string $key, array $old, array $errors): void
     {
         $_SESSION[$key] = [
@@ -364,6 +443,12 @@ class TransactionController
         ];
     }
 
+    /**
+     * Retrieve and consume form state from session.
+     *
+     * @param string $key Session key
+     * @return array<string, mixed> Form state or empty array
+     */
     private function consumeFormState(string $key): array
     {
         $state = $_SESSION[$key] ?? [];
@@ -376,6 +461,12 @@ class TransactionController
         return $state;
     }
 
+    /**
+     * Trim all string values in an array.
+     *
+     * @param array<string, mixed> $values Input array
+     * @return array<string, mixed> Sanitized array
+     */
     private function sanitizeArray(array $values): array
     {
         $sanitized = [];
@@ -386,6 +477,12 @@ class TransactionController
         return $sanitized;
     }
 
+    /**
+     * Render a view within the authenticated layout.
+     *
+     * @param string $view View file path (relative to app/views/)
+     * @param array<string, mixed> $data Variables to extract into the view
+     */
     private function render(string $view, array $data = []): void
     {
         extract($data, EXTR_SKIP);
@@ -397,12 +494,22 @@ class TransactionController
         require __DIR__ . '/../views/layouts/app.php';
     }
 
+    /**
+     * Perform an HTTP 302 redirect. Throws RedirectException to halt execution.
+     *
+     * @param string $path Target URL path
+     */
     private function redirect(string $path): void
     {
         header('Location: ' . $path, true, 302);
         throw new RedirectException();
     }
 
+    /**
+     * Lazy-load the Transaction model instance.
+     *
+     * @return Transaction
+     */
     private function transactions(): Transaction
     {
         if ($this->transactions === null) {
@@ -412,6 +519,11 @@ class TransactionController
         return $this->transactions;
     }
 
+    /**
+     * Lazy-load the Budget model instance.
+     *
+     * @return Budget
+     */
     private function budgets(): Budget
     {
         if ($this->budgets === null) {
@@ -421,6 +533,11 @@ class TransactionController
         return $this->budgets;
     }
 
+    /**
+     * Lazy-load the Category model instance.
+     *
+     * @return Category
+     */
     private function categories(): Category
     {
         if ($this->categories === null) {

@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * User Model
+ *
+ * Handles all database operations for the users table including
+ * authentication, registration, and profile management.
+ */
 class User
 {
     private PDO $pdo;
@@ -9,6 +17,12 @@ class User
         $this->pdo = Database::getInstance();
     }
 
+    /**
+     * Find a user by email address.
+     *
+     * @param string $email The email to search for
+     * @return array<string, mixed>|null User record or null
+     */
     public function findByEmail(string $email): ?array
     {
         $statement = $this->pdo->prepare(
@@ -23,6 +37,12 @@ class User
         return $user ?: null;
     }
 
+    /**
+     * Create a new user.
+     *
+     * @param array{name: string, email: string, password: string, role?: string, is_active?: bool} $data User data
+     * @return int The new user ID
+     */
     public function create(array $data): int
     {
         $statement = $this->pdo->prepare(
@@ -41,6 +61,12 @@ class User
         return (int) $statement->fetchColumn();
     }
 
+    /**
+     * Find a user by ID (excludes password).
+     *
+     * @param int $id The user ID
+     * @return array<string, mixed>|null User record or null
+     */
     public function findById(int $id): ?array
     {
         $statement = $this->pdo->prepare(
@@ -55,6 +81,13 @@ class User
         return $user ?: null;
     }
 
+    /**
+     * Update user fields. Unspecified fields retain their current values.
+     *
+     * @param int $id The user ID
+     * @param array<string, mixed> $data Fields to update
+     * @return bool True on success
+     */
     public function update(int $id, array $data): bool
     {
         $statement = $this->pdo->prepare(
@@ -82,6 +115,13 @@ class User
         return $statement->execute();
     }
 
+    /**
+     * Bind a nullable string value to a PDO statement parameter.
+     *
+     * @param PDOStatement $statement The prepared statement
+     * @param string $key The parameter name (with colon prefix)
+     * @param string|null $value The value to bind
+     */
     private function bindNullableString(PDOStatement $statement, string $key, ?string $value): void
     {
         if ($value === null) {

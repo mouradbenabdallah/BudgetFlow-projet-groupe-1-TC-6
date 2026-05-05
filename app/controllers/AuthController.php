@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * Auth Controller
+ *
+ * Handles user authentication flows: login, registration, and logout.
+ * New accounts require admin activation before they can log in.
+ */
 class AuthController
 {
     private ?User $users = null;
@@ -10,6 +18,9 @@ class AuthController
         $this->session = new Session();
     }
 
+    /**
+     * Display the login form.
+     */
     public function showLogin(): void
     {
         $this->redirectIfAuthenticated();
@@ -22,6 +33,9 @@ class AuthController
         ]);
     }
 
+    /**
+     * Process login submission. Validates credentials and creates session.
+     */
     public function login(): void
     {
         $this->redirectIfAuthenticated();
@@ -87,6 +101,9 @@ class AuthController
         $this->redirect($user['role'] === 'admin' ? '/admin' : '/dashboard');
     }
 
+    /**
+     * Display the registration form.
+     */
     public function showRegister(): void
     {
         $this->redirectIfAuthenticated();
@@ -99,6 +116,9 @@ class AuthController
         ]);
     }
 
+    /**
+     * Process registration submission. Creates an inactive user awaiting admin approval.
+     */
     public function register(): void
     {
         $this->redirectIfAuthenticated();
@@ -160,6 +180,9 @@ class AuthController
         $this->redirect('/register');
     }
 
+    /**
+     * Destroy the user session and redirect to login.
+     */
     public function logout(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -170,6 +193,12 @@ class AuthController
         $this->redirect('/login');
     }
 
+    /**
+     * Render a view within the guest layout.
+     *
+     * @param string $view View file path (relative to app/views/)
+     * @param array<string, mixed> $data Variables to extract into the view
+     */
     private function render(string $view, array $data = []): void
     {
         extract($data, EXTR_SKIP);
@@ -181,6 +210,9 @@ class AuthController
         require __DIR__ . '/../views/layouts/guest.php';
     }
 
+    /**
+     * Redirect authenticated users to their appropriate dashboard.
+     */
     private function redirectIfAuthenticated(): void
     {
         if (!Auth::isLoggedIn()) {
@@ -191,22 +223,44 @@ class AuthController
         $this->redirect(($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard');
     }
 
+    /**
+     * Perform an HTTP 302 redirect. Throws RedirectException to halt execution.
+     *
+     * @param string $path Target URL path
+     */
     private function redirect(string $path): void
     {
         header('Location: ' . $path, true, 302);
         throw new RedirectException();
     }
 
+    /**
+     * Normalize and trim an email value.
+     *
+     * @param mixed $email Raw email input
+     * @return string Lowercase trimmed email
+     */
     private function normalizeEmail(mixed $email): string
     {
         return strtolower(trim((string) $email));
     }
 
+    /**
+     * Check if a value represents an active/truthy state.
+     *
+     * @param mixed $value The value to check
+     * @return bool True if active
+     */
     private function isActive(mixed $value): bool
     {
         return in_array($value, [true, 1, '1', 't', 'true'], true);
     }
 
+    /**
+     * Lazy-load the User model instance.
+     *
+     * @return User
+     */
     private function users(): User
     {
         if ($this->users === null) {

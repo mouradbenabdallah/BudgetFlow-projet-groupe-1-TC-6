@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 /**
  * Dashboard Controller
- *
+ * 
  * Renders the main user dashboard with financial summaries,
  * budget progress, recent transactions, and category breakdowns.
+ * 
+ * This controller handles the main dashboard view with:
+ * - KPI cards (income, expenses, balance, saving rate)
+ * - Budget progress bars
+ * - Recent transactions list
+ * - Category breakdown chart
+ * - Monthly evolution chart
  */
 class DashboardController
 {
@@ -15,6 +22,13 @@ class DashboardController
 
     /**
      * Display the dashboard with aggregated financial data.
+     * 
+     * Gathers all dashboard data:
+     * - Total income/expense for current month
+     * - Budget spending progress
+     * - Recent transactions (last 8)
+     * - Category breakdown for current month
+     * - Monthly evolution (last 6 months)
      */
     public function index(): void
     {
@@ -23,13 +37,15 @@ class DashboardController
         $user = Auth::getUser();
         $userId = (int) ($user['id'] ?? 0);
 
-        // Période du mois courant pour les cartes et la répartition.
+        // Current month period for cards and category breakdown
         $startOfMonth = date('Y-m-01');
         $endOfMonth = date('Y-m-t');
 
+        // Calculate KPIs
         $totalIncome = $this->transactions()->sumByType($userId, 'income', $startOfMonth, $endOfMonth);
         $totalExpense = $this->transactions()->sumByType($userId, 'expense', $startOfMonth, $endOfMonth);
 
+        // Build data array for the view
         $data = [
             'total_income' => $totalIncome,
             'total_expense' => $totalExpense,
@@ -40,6 +56,7 @@ class DashboardController
             'monthly_evolution' => $this->buildMonthlyEvolution($userId),
         ];
 
+        // Render the dashboard view
         $this->render('dashboard/index', [
             'title' => 'Tableau de bord',
             'pageTitle' => 'Tableau de bord',
@@ -50,7 +67,11 @@ class DashboardController
 
     /**
      * Build budget summary data with spending percentages and status indicators.
-     *
+     * 
+     * For each budget, calculates:
+     * - Spending percentage vs limit
+     * - Status: ok (<80%), warning (80-99%), danger (>=100%)
+     * 
      * @param int $userId The user ID
      * @return array<array<string, mixed>> Budget summary records
      */
@@ -86,10 +107,15 @@ class DashboardController
 
     /**
      * Build monthly evolution data for the last 6 months.
+     * 
      * Fills gaps with zero values for months without transactions.
-     *
+     * Used to generate the monthly evolution chart.
+     * 
      * @param int $userId The user ID
-     * @return array<array<string, mixed>> Monthly evolution records
+     * @return array<array<string, mixed>> Monthly evolution records with keys:
+     *         - month: short month name (e.g., "Jan")
+     *         - income: total income for that month
+     *         - expense: total expense for that month
      */
     private function buildMonthlyEvolution(int $userId): array
     {
@@ -109,6 +135,7 @@ class DashboardController
             12 => 'Déc',
         ];
 
+        // Index monthly data by month key (YYYY-MM)
         foreach ($this->transactions()->monthlyEvolution($userId) as $row) {
             $indexedRows[(string) $row['month_key']] = [
                 'income' => (float) $row['income'],
@@ -116,6 +143,7 @@ class DashboardController
             ];
         }
 
+        // Build last 6 months with zero-filled gaps
         $evolution = [];
         $currentMonth = date('Y-m-01');
 
@@ -136,13 +164,19 @@ class DashboardController
 
     /**
      * Render a view within the authenticated layout.
-     *
+     * 
+     * Extracts data array into variables for the view,
+     * captures the view output, and renders it within the app layout.
+     * 
      * @param string $view View file path (relative to app/views/)
      * @param array<string, mixed> $data Variables to extract into the view
      */
     private function render(string $view, array $data = []): void
     {
-        extract($data, EXTR_SKIP);
+        // Extract variables from data array
+        foreach ($data as $key => $value) {
+            $$key = $value;
+        }
 
         ob_start();
         require __DIR__ . '/../views/' . $view . '.php';
@@ -153,7 +187,7 @@ class DashboardController
 
     /**
      * Lazy-load the Budget model instance.
-     *
+     * 
      * @return Budget
      */
     private function budgets(): Budget
@@ -167,7 +201,7 @@ class DashboardController
 
     /**
      * Lazy-load the Transaction model instance.
-     *
+     * 
      * @return Transaction
      */
     private function transactions(): Transaction

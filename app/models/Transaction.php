@@ -4,14 +4,23 @@ declare(strict_types=1);
 
 /**
  * Transaction Model
- *
+ * 
  * Handles all database operations for transactions including
  * filtering, aggregation, and CRUD operations.
+ * 
+ * Supports personal and shared budget transactions.
+ * A user can see transactions if they are:
+ * - The transaction creator (t.user_id)
+ * - The budget owner (b.owner_id)
+ * - A member of the budget (budget_members)
  */
 class Transaction
 {
     private PDO $pdo;
 
+    /**
+     * Constructor - Get database instance.
+     */
     public function __construct()
     {
         $this->pdo = Database::getInstance();
@@ -19,13 +28,18 @@ class Transaction
 
     /**
      * Fetch transactions for a user with optional filters.
-     *
+     * 
+     * This method has two calling conventions:
+     * 1. findByUser($userId, $limit) - Quick fetch of recent transactions
+     * 2. findByUser($userId, $filtersArray) - Filtered, paginated results
+     * 
      * @param int $userId The user ID
      * @param array|int $filters Filter array or limit integer
-     * @return array<array<string, mixed>> List of transaction records
+     * @return array<array<string, mixed>> List of transaction records with category_name, budget_name
      */
     public function findByUser(int $userId, array|int $filters = []): array
     {
+        // Quick mode: just get N recent transactions
         if (is_int($filters)) {
             $statement = $this->pdo->prepare(
                 "SELECT t.id,
@@ -40,11 +54,16 @@ class Transaction
                  FROM transactions t
                  LEFT JOIN categories c ON c.id = t.category_id
                  JOIN budgets b ON b.id = t.budget_id
-                 WHERE t.user_id = :user_id
+                 LEFT JOIN budget_members bm
+                   ON bm.budget_id = t.budget_id
+                  AND bm.user_id = :member_user_id
+                 WHERE (t.user_id = :user_id OR b.owner_id = :owner_user_id OR bm.user_id IS NOT NULL)
                  ORDER BY t.date DESC, t.created_at DESC, t.id DESC
                  LIMIT :limit"
             );
+            $statement->bindValue(':member_user_id', $userId, PDO::PARAM_INT);
             $statement->bindValue(':user_id', $userId, PDO::PARAM_INT);
+            $statement->bindValue(':owner_user_id', $userId, PDO::PARAM_INT);
             $statement->bindValue(':limit', $filters, PDO::PARAM_INT);
             $statement->bindValue(':missing_category', 'Sans catégorie', PDO::PARAM_STR);
             $statement->bindValue(':missing_color', '#8B90A7', PDO::PARAM_STR);
@@ -53,9 +72,10 @@ class Transaction
             return $statement->fetchAll();
         }
 
+        // Full mode: with filters and pagination
         $normalized = $this->normalizeFilters($filters);
-        $where = ['t.user_id = :user_id'];
-        $params = [':user_id' => $userId];
+        $where = ['(t.user_id = :user_id OR b.owner_id = :owner_user_id OR bm.user_id IS NOT NULL)'];
+        $params = [':user_id' => $userId, ':owner_user_id' => $userId, ':member_user_id' => $userId];
 
         if ($normalized['type'] !== 'all') {
             $where[] = 't.type = :type';
@@ -96,6 +116,9 @@ class Transaction
              FROM transactions t
              LEFT JOIN categories c ON c.id = t.category_id
              JOIN budgets b ON b.id = t.budget_id
+             LEFT JOIN budget_members bm
+               ON bm.budget_id = t.budget_id
+              AND bm.user_id = :member_user_id
              WHERE " . implode(' AND ', $where) . "
              ORDER BY t.date DESC, t.created_at DESC, t.id DESC
              LIMIT :limit OFFSET :offset"
@@ -115,7 +138,9 @@ class Transaction
 
     /**
      * Sum transactions by type for a user within a date range.
-     *
+     * 
+     * Convenience method that extracts month from date range and calls sumByTypeAndUser().
+     * 
      * @param int $userId The user ID
      * @param string $type 'income' or 'expense'
      * @param string $startDate Start date (YYYY-MM-DD)
@@ -129,7 +154,11 @@ class Transaction
 
     /**
      * Sum transactions by type and user for a specific month.
-     *
+     * 
+     * Includes transactions from:
+     * - Personal budgets owned by user
+     * - Shared budgets where user is owner or member
+     * 
      * @param int $userId The user ID
      * @param string $type 'income' or 'expense'
      * @param string $month Month in YYYY-MM format
@@ -186,14 +215,20 @@ class Transaction
                     COALESCE(SUM(t.amount), 0) AS amount
              FROM transactions t
              LEFT JOIN categories c ON c.id = t.category_id
-             WHERE t.user_id = :user_id
+             JOIN budgets b ON b.id = t.budget_id
+             LEFT JOIN budget_members bm
+               ON bm.budget_id = t.budget_id
+              AND bm.user_id = :member_user_id
+             WHERE (t.user_id = :transaction_user_id OR b.owner_id = :owner_user_id OR bm.user_id IS NOT NULL)
                AND t.type = 'expense'
                AND t.date >= :start_date
                AND t.date < (:end_date::date + 1)
              GROUP BY c.id, c.name, c.color
              ORDER BY amount DESC"
         );
-        $statement->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $statement->bindValue(':member_user_id', $userId, PDO::PARAM_INT);
+        $statement->bindValue(':transaction_user_id', $userId, PDO::PARAM_INT);
+        $statement->bindValue(':owner_user_id', $userId, PDO::PARAM_INT);
         $statement->bindValue(':start_date', $startDate, PDO::PARAM_STR);
         $statement->bindValue(':end_date', $endDate, PDO::PARAM_STR);
         $statement->execute();
@@ -215,12 +250,18 @@ class Transaction
                     COALESCE(SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE 0 END), 0) AS income,
                     COALESCE(SUM(CASE WHEN t.type = 'expense' THEN t.amount ELSE 0 END), 0) AS expense
              FROM transactions t
-             WHERE t.user_id = :user_id
+             JOIN budgets b ON b.id = t.budget_id
+             LEFT JOIN budget_members bm
+               ON bm.budget_id = t.budget_id
+              AND bm.user_id = :member_user_id
+             WHERE (t.user_id = :transaction_user_id OR b.owner_id = :owner_user_id OR bm.user_id IS NOT NULL)
                AND t.date >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months'
              GROUP BY date_trunc('month', t.date)
              ORDER BY date_trunc('month', t.date)"
         );
-        $statement->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $statement->bindValue(':member_user_id', $userId, PDO::PARAM_INT);
+        $statement->bindValue(':transaction_user_id', $userId, PDO::PARAM_INT);
+        $statement->bindValue(':owner_user_id', $userId, PDO::PARAM_INT);
         $statement->execute();
 
         return $statement->fetchAll();
@@ -236,8 +277,8 @@ class Transaction
     public function countByUser(int $userId, array $filters = []): int
     {
         $normalized = $this->normalizeFilters($filters);
-        $where = ['t.user_id = :user_id'];
-        $params = [':user_id' => $userId];
+        $where = ['(t.user_id = :user_id OR b.owner_id = :owner_user_id OR bm.user_id IS NOT NULL)'];
+        $params = [':user_id' => $userId, ':owner_user_id' => $userId, ':member_user_id' => $userId];
 
         if ($normalized['type'] !== 'all') {
             $where[] = 't.type = :type';
@@ -263,6 +304,10 @@ class Transaction
         $statement = $this->pdo->prepare(
             'SELECT COUNT(*)
              FROM transactions t
+             JOIN budgets b ON b.id = t.budget_id
+             LEFT JOIN budget_members bm
+               ON bm.budget_id = t.budget_id
+              AND bm.user_id = :member_user_id
              WHERE ' . implode(' AND ', $where)
         );
 
@@ -386,9 +431,18 @@ class Transaction
 
     /**
      * Normalize and validate filter parameters.
-     *
+     * 
+     * Converts raw filter input into a consistent format for database queries.
+     * Defaults are applied for missing or invalid values.
+     * 
      * @param array<string, mixed> $filters Raw filter input
-     * @return array<string, mixed> Normalized filters
+     * @return array<string, mixed> Normalized filters with keys:
+     *         - type: 'all', 'income', or 'expense'
+     *         - budget_id: int or null
+     *         - category_id: int or null
+     *         - month: YYYY-MM format
+     *         - month_start, month_end: date range for the month
+     *         - page, limit, offset: pagination params
      */
     private function normalizeFilters(array $filters): array
     {
@@ -420,7 +474,10 @@ class Transaction
 
     /**
      * Normalize a value to a positive integer or null.
-     *
+     * 
+     * Converts various input types to a positive integer.
+     * Returns null for non-numeric values, empty strings, or zero/negative numbers.
+     * 
      * @param mixed $value The raw value
      * @return int|null Positive integer or null
      */
@@ -437,7 +494,10 @@ class Transaction
 
     /**
      * Normalize a month string to YYYY-MM format.
-     *
+     * 
+     * Validates that the input matches YYYY-MM pattern.
+     * Falls back to current month if invalid.
+     * 
      * @param string $month Raw month input
      * @return string Normalized YYYY-MM or current month
      */
@@ -452,9 +512,11 @@ class Transaction
 
     /**
      * Resolve the start and end dates for a given month.
-     *
+     * 
+     * Converts a YYYY-MM month string to a date range covering that entire month.
+     * 
      * @param string $month Month in YYYY-MM format
-     * @return array{start: string, end: string}|null Date range or null on failure
+     * @return array{start: string, end: string}|null Date range (Y-m-d format) or null on failure
      */
     private function resolveMonthRange(string $month): ?array
     {
@@ -474,10 +536,12 @@ class Transaction
 
     /**
      * Extract the month from a date range (uses the start date).
-     *
+     * 
+     * Convenience method to get YYYY-MM from a date range.
+     * 
      * @param string $startDate Start date (YYYY-MM-DD)
      * @param string $endDate End date (YYYY-MM-DD)
-     * @return string Month in YYYY-MM format
+     * @return string Month in YYYY-MM format (falls back to current month)
      */
     private function extractMonthFromRange(string $startDate, string $endDate): string
     {
@@ -493,7 +557,9 @@ class Transaction
 
     /**
      * Bind a nullable string value to a PDO statement parameter.
-     *
+     * 
+     * Binds null if value is null, otherwise binds as string.
+     * 
      * @param PDOStatement $statement The prepared statement
      * @param string $key The parameter name (with colon prefix)
      * @param string|null $value The value to bind
@@ -510,7 +576,9 @@ class Transaction
 
     /**
      * Bind a nullable integer value to a PDO statement parameter.
-     *
+     * 
+     * Binds null if value is null/empty, otherwise binds as integer.
+     * 
      * @param PDOStatement $statement The prepared statement
      * @param string $key The parameter name (with colon prefix)
      * @param mixed $value The value to bind

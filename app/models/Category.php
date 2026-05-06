@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 /**
  * Category Model
- *
+ * 
  * Handles all database operations for the categories table.
- * Categories can be global (user_id IS NULL) or personal (user_id = X).
+ * Categories can be:
+ * - Global (user_id IS NULL): visible to all users
+ * - Personal (user_id = X): visible only to that user
+ * 
+ * Default categories are created automatically for new users.
  */
 class Category
 {
     private PDO $pdo;
 
+    /**
+     * Constructor - Get database instance.
+     */
     public function __construct()
     {
         $this->pdo = Database::getInstance();
@@ -19,10 +26,12 @@ class Category
 
     /**
      * Fetch all categories available to a user (global + personal).
-     * Includes aggregated income/expense counts and totals.
-     *
+     * 
+     * Returns both default categories (user_id IS NULL) and user's personal categories.
+     * Also includes aggregated transaction counts and totals for each category.
+     * 
      * @param int $userId The user ID
-     * @return array<array<string, mixed>> List of category records
+     * @return array<array<string, mixed>> List of category records with transaction stats
      */
     public function findAllForUser(int $userId): array
     {
@@ -46,7 +55,7 @@ class Category
 
     /**
      * Find a single category by ID.
-     *
+     * 
      * @param int $id The category ID
      * @return array<string, mixed>|null Category record or null
      */
@@ -67,7 +76,7 @@ class Category
 
     /**
      * Create a new personal category.
-     *
+     * 
      * @param array{name: string, color: string, user_id: int} $data
      * @return int The new category ID
      */
@@ -90,7 +99,7 @@ class Category
 
     /**
      * Update category name and/or color.
-     *
+     * 
      * @param int $id The category ID
      * @param array{name?: string|null, color?: string|null} $data Fields to update
      * @return bool True on success
@@ -112,8 +121,11 @@ class Category
     }
 
     /**
-     * Delete a category. Transactions referencing it will have category_id set to NULL.
-     *
+     * Delete a category.
+     * 
+     * Note: Transactions referencing this category will have category_id set to NULL
+     * due to the ON DELETE SET NULL constraint.
+     * 
      * @param int $id The category ID
      * @return bool True on success
      */
@@ -125,32 +137,6 @@ class Category
         return $statement->execute();
     }
 
-    /**
-     * Count transactions using a specific category.
-     *
-     * @param int $categoryId The category ID
-     * @return int Number of transactions
-     */
-    public function isUsedInTransactions(int $categoryId): int
-    {
-        $statement = $this->pdo->prepare(
-            'SELECT COUNT(*)
-             FROM transactions
-             WHERE category_id = :category_id'
-        );
-        $statement->bindValue(':category_id', $categoryId, PDO::PARAM_INT);
-        $statement->execute();
-
-        return (int) $statement->fetchColumn();
-    }
-
-    /**
-     * Bind a nullable string value to a PDO statement parameter.
-     *
-     * @param PDOStatement $statement The prepared statement
-     * @param string $key The parameter name (with colon prefix)
-     * @param string|null $value The value to bind
-     */
     private function bindNullableString(PDOStatement $statement, string $key, ?string $value): void
     {
         if ($value === null) {

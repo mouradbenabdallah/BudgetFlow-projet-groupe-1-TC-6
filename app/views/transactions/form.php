@@ -43,8 +43,8 @@ $maxDate = date('Y-m-d', strtotime('+1 year'));
                 <div class="full">
                     <label class="bf-label">Type</label>
                     <div class="bf-type-toggle-group">
-                        <button class="bf-type-toggle <?= $selectedType === 'income' ? 'is-active' : '' ?>" type="button" data-transaction-type="income">💰 Revenu</button>
-                        <button class="bf-type-toggle <?= $selectedType === 'expense' ? 'is-active' : '' ?>" type="button" data-transaction-type="expense">💸 Dépense</button>
+                        <button class="bf-type-toggle <?= $selectedType === 'income' ? 'is-active' : '' ?>" type="button" data-transaction-type="income"><i class="bi bi-arrow-down-circle"></i> Revenu</button>
+                        <button class="bf-type-toggle <?= $selectedType === 'expense' ? 'is-active' : '' ?>" type="button" data-transaction-type="expense"><i class="bi bi-arrow-up-circle"></i> Dépense</button>
                     </div>
                     <?php if (!empty($errors['type'])): ?>
                         <div class="bf-alert bf-alert-danger mt-2" role="alert"><?= $e($errors['type']) ?></div>

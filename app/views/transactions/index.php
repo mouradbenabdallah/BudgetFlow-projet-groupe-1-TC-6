@@ -217,69 +217,91 @@ $currentMonth = date('Y-m');
     </div>
 </div>
 
+
 <!-- Add Transaction Modal -->
 <div class="modal fade" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bf-modal-dark">
             <div class="modal-header">
                 <div>
-                    <small class="bf-modal-label-dark">NEW TRANSACTION</small>
-                    <h5 class="modal-title" id="addTransactionModalLabel">Add Transaction</h5>
+                    <small class="bf-modal-label-dark">NOUVELLE TRANSACTION</small>
+                    <h5 class="modal-title" id="addTransactionModalLabel">Ajouter une transaction</h5>
                 </div>
                 <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" action="/transactions/create">
                 <?= CSRF::getTokenField() ?>
+                <input type="hidden" id="modal-transaction-type" name="type" value="expense">
                 <div class="modal-body">
                     <div class="bf-form-group-dark">
                         <label class="bf-label-dark">TYPE</label>
                         <div class="bf-type-toggle-group-dark">
-                            <button type="button" class="bf-type-toggle-dark active" data-type="expense">Expense</button>
-                            <button type="button" class="bf-type-toggle-dark" data-type="income">Income</button>
+                            <button type="button" class="bf-type-toggle-dark" data-type="expense"><i class="bi bi-arrow-up-circle"></i> Dépense</button>
+                            <button type="button" class="bf-type-toggle-dark" data-type="income"><i class="bi bi-arrow-down-circle"></i> Revenu</button>
                         </div>
-                        <input type="hidden" id="transaction-type-input" name="type" value="expense">
                     </div>
-
                     <div class="bf-form-group-dark">
-                        <label class="bf-label-dark">DESCRIPTION</label>
-                        <input type="text" name="description" class="bf-input-dark" placeholder="e.g. Coffee at Starbucks"
-                            value="<?= $e($formState['description'] ?? '') ?>">
+                        <label class="bf-label-dark" for="modal-amount">MONTANT (DT)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">DT</span>
+                            <input class="form-control bf-input-dark" id="modal-amount" type="number" step="0.001" min="0.001" name="amount" placeholder="0.00" required>
+                        </div>
                     </div>
-
-                    <div class="bf-form-group-dark">
-                        <label class="bf-label-dark">AMOUNT (TND)</label>
-                        <input type="number" name="amount" class="bf-input-dark" placeholder="0.00" step="0.001" min="0"
-                            value="<?= $e($formState['amount'] ?? '') ?>">
-                    </div>
-
                     <div class="bf-form-row-dark">
                         <div class="bf-form-group-dark">
-                            <label class="bf-label-dark">CATEGORY</label>
-                            <select name="category_id" class="bf-select-dark">
-                                <option value="">Select category</option>
-                                <?php foreach ($categories as $cat): ?>
-                                <option value="<?= $e((int) ($cat['id'] ?? 0)) ?>"
-                                    <?= (int) ($formState['category_id'] ?? 0) === (int) ($cat['id'] ?? 0) ? 'selected' : '' ?>>
-                                    <?= $e($cat['name'] ?? '') ?>
-                                </option>
+                            <label class="bf-label-dark" for="modal-date">DATE</label>
+                            <input class="form-control bf-input-dark" id="modal-date" type="date" name="date" value="<?= date('Y-m-d') ?>" required>
+                        </div>
+                        <div class="bf-form-group-dark">
+                            <label class="bf-label-dark" for="modal-budget">BUDGET</label>
+                            <select class="form-select bf-input-dark" id="modal-budget" name="budget_id" required>
+                                <option value="">Sélectionner un budget</option>
+                                <?php foreach ($budgets as $budget): ?>
+                                    <option value="<?= $e((int) ($budget['id'] ?? 0)) ?>"><?= $e($budget['name'] ?? '') ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="bf-form-group-dark">
-                            <label class="bf-label-dark">DATE</label>
-                            <input type="date" name="date" class="bf-input-dark"
-                                value="<?= $e($formState['date'] ?? date('Y-m-d')) ?>">
-                        </div>
+                    </div>
+                    <div class="bf-form-group-dark">
+                        <label class="bf-label-dark" for="modal-category">CATÉGORIE</label>
+                        <select class="form-select bf-input-dark" id="modal-category" name="category_id">
+                            <option value="">Sans catégorie</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <?php $color = preg_match('/^#[0-9A-Fa-f]{6}$/', (string) ($cat['color'] ?? '')) === 1 ? (string) $cat['color'] : '#8B90A7'; ?>
+                                <option value="<?= $e((int) ($cat['id'] ?? 0)) ?>" data-color="<?= $e($color) ?>"><?= $e($cat['name'] ?? '') ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="bf-form-group-dark">
+                        <label class="bf-label-dark" for="modal-description">DESCRIPTION</label>
+                        <input class="form-control bf-input-dark" id="modal-description" type="text" name="description" maxlength="255" placeholder="Ex. Courses hebdomadaires">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="bf-btn bf-btn-cancel-dark" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="bf-btn bf-btn-cancel-dark" data-bs-dismiss="modal">Annuler</button>
                     <button type="submit" class="bf-btn bf-btn-submit-dark">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Add Transaction
+                        Ajouter la transaction
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('addTransactionModal');
+    const typeButtons = modal.querySelectorAll('.bf-type-toggle-dark');
+    const typeInput = document.getElementById('modal-transaction-type');
+    
+    typeButtons.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            typeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            typeInput.value = btn.getAttribute('data-type');
+        });
+    });
+    // Set default
+    typeButtons[0].classList.add('active');
+});
+</script>

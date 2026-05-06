@@ -1,6 +1,5 @@
 <?php
 // Vue du tableau de bord utilisateur.
-$data = $data ?? [];
 $e = static fn (mixed $value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 $formatTnd = static fn (mixed $amount): string => number_format((float) $amount, 0, ',', ' ') . ' TND';
 $formatDate = static function (mixed $date): string {

@@ -53,8 +53,8 @@ services:
       POSTGRES_USER: budgetflow
       POSTGRES_PASSWORD: budgetflow
     ports:
-      # Port 5432 pour Beekeeper et outils externes
-      - "5432:5432"
+      # Port dynamique sur l'hôte -> 5432 dans le conteneur
+      - "5432"
     volumes:
       # Volume persistant : garde les données même après docker compose down.
       - postgres_data:/var/lib/postgresql/data

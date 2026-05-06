@@ -4,15 +4,24 @@ declare(strict_types=1);
 
 /**
  * Auth Controller
- *
+ * 
  * Handles user authentication flows: login, registration, and logout.
- * New accounts require admin activation before they can log in.
+ * 
+ * Security features:
+ * - CSRF protection on all forms
+ * - Password hashing with password_hash()
+ * - Session fixation protection (session_regenerate_id)
+ * - Generic error messages (don't reveal if email exists)
+ * - New accounts require admin activation
  */
 class AuthController
 {
     private ?User $users = null;
     private Session $session;
 
+    /**
+     * Constructor - Initialize session handler.
+     */
     public function __construct()
     {
         $this->session = new Session();
@@ -20,6 +29,8 @@ class AuthController
 
     /**
      * Display the login form.
+     * 
+     * Redirects to dashboard if already logged in.
      */
     public function showLogin(): void
     {
@@ -35,12 +46,19 @@ class AuthController
 
     /**
      * Process login submission. Validates credentials and creates session.
+     * 
+     * Security:
+     * - CSRF token validation
+     * - Email format validation
+     * - Password verification with password_verify()
+     * - Generic error message (doesn't reveal if email exists)
+     * - Account must be activated by admin
      */
     public function login(): void
     {
         $this->redirectIfAuthenticated();
 
-        // Normalisation et validation serveur : on ne fait jamais confiance au HTML seul.
+        // Normalize and validate server-side
         $email = $this->normalizeEmail($_POST['email'] ?? '');
         $password = (string) ($_POST['password'] ?? '');
         $errors = [];
@@ -69,7 +87,7 @@ class AuthController
 
         $user = $this->users()->findByEmail($email);
 
-        // Message volontairement générique pour ne pas révéler si l'email existe.
+        // Voluntarily generic message to not reveal if email exists
         if ($user === null || !password_verify($password, $user['password'])) {
             $this->render('auth/login', [
                 'title' => 'Connexion',
@@ -80,7 +98,7 @@ class AuthController
             return;
         }
 
-        // Un compte créé par inscription reste bloqué tant qu'un admin ne l'active pas.
+        // Account created by registration stays blocked until admin activates it
         if (!$this->isActive($user['is_active'])) {
             $this->render('auth/login', [
                 'title' => 'Connexion',
@@ -91,14 +109,14 @@ class AuthController
             return;
         }
 
-        // Après login réussi, on régénère l'ID pour limiter la fixation de session.
+        // After successful login, regenerate ID to limit session fixation
         session_regenerate_id(true);
         $this->session->set('user_id', (int) $user['id']);
         $this->session->set('name', (string) $user['name']);
         $this->session->set('email', (string) $user['email']);
         $this->session->set('role', (string) $user['role']);
 
-        $this->redirect($user['role'] === 'admin' ? '/admin' : '/dashboard');
+        $this->redirect('/dashboard');
     }
 
     /**

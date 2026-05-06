@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 /**
  * Transaction Controller
- *
+ * 
  * Handles CRUD operations for transactions including listing,
  * creation, editing, and deletion with full ownership validation.
+ * 
+ * Features:
+ * - List transactions with filters (type, category, budget, month)
+ * - Create/edit transactions with validation
+ * - CSRF protection
+ * - Ownership validation (user can only edit/delete their own transactions)
+ * - Form state persistence on validation errors
  */
 class TransactionController
 {
@@ -17,6 +24,9 @@ class TransactionController
     private ?Category $categories = null;
     private Session $session;
 
+    /**
+     * Constructor - Initialize session handler.
+     */
     public function __construct()
     {
         $this->session = new Session();
@@ -24,6 +34,14 @@ class TransactionController
 
     /**
      * Display the transactions listing with filters and pagination.
+     * 
+     * Supports filtering by:
+     * - Type (income/expense)
+     * - Category
+     * - Budget
+     * - Month
+     * 
+     * Pagination is handled automatically.
      */
     public function index(): void
     {
@@ -42,6 +60,7 @@ class TransactionController
         $transactions = $this->transactions()->findByUser($userId, $filters);
         $month = $filters['month'];
 
+        // Calculate summary for current month filter
         $summary = [
             'income' => $this->transactions()->sumByTypeAndUser($userId, 'income', $month),
             'expense' => $this->transactions()->sumByTypeAndUser($userId, 'expense', $month),
@@ -67,6 +86,8 @@ class TransactionController
 
     /**
      * Display the transaction creation form.
+     * 
+     * Restores form state (old input, validation errors) from session if available.
      */
     public function showCreate(): void
     {
@@ -93,6 +114,14 @@ class TransactionController
 
     /**
      * Process transaction creation via POST.
+     * 
+     * Validates:
+     * - CSRF token
+     * - Required fields (type, amount, date, budget_id)
+     * - Valid budget ownership
+     * - Valid category (if provided)
+     * 
+     * On validation error, stores input and errors in session and redirects back.
      */
     public function create(): void
     {
@@ -102,19 +131,22 @@ class TransactionController
         $userId = (int) ($user['id'] ?? 0);
         $input = $_POST;
 
+        // Validate CSRF token
         if (!CSRF::validateToken((string) ($input['csrf_token'] ?? ''))) {
             $this->storeFormState('transaction_form', $input, ['form' => 'La session du formulaire a expiré. Veuillez réessayer.']);
             $this->session->setFlash('danger', 'Le formulaire a expiré.');
             $this->redirect('/transactions/create');
         }
 
-        [$payload, $errors] = $this->validateTransactionInput($input, $userId);
+        // Validate input
+        list($payload, $errors) = $this->validateTransactionInput($input, $userId);
         if ($errors !== []) {
             $this->storeFormState('transaction_form', $input, $errors);
-            $this->session->setFlash('danger', 'Corrigez les erreurs avant d’enregistrer la transaction.');
+            $this->session->setFlash('danger', 'Corrigez les erreurs avant d\'enregistrer la transaction.');
             $this->redirect('/transactions/create');
         }
 
+        // Create transaction
         $this->transactions()->create($payload);
         $this->session->setFlash('success', 'La transaction a été créée avec succès.');
         $this->redirect('/transactions');
@@ -122,6 +154,10 @@ class TransactionController
 
     /**
      * Display the transaction edit form.
+     * 
+     * Validates:
+     * - Transaction exists
+     * - User owns the transaction
      */
     public function showEdit(): void
     {
@@ -202,7 +238,7 @@ class TransactionController
             $this->redirect('/transactions/edit?id=' . $transactionId);
         }
 
-        [$payload, $errors] = $this->validateTransactionInput($input, $userId, $transactionId);
+        list($payload, $errors) = $this->validateTransactionInput($input, $userId, $transactionId);
         if ($errors !== []) {
             $this->storeFormState('transaction_form', $input, $errors);
             $this->session->setFlash('danger', 'Corrigez les erreurs avant d’enregistrer la transaction.');

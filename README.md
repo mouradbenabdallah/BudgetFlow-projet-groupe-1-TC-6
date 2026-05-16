@@ -416,11 +416,11 @@ BudgetFlow envoie des emails automatiques via **PHPMailer + Resend SMTP** pour :
 
 <br/>
 
-|                       <img src="https://github.com/mouradbenabdallah.png" width="80" style="border-radius:50%"/>                       |                    <img src="https://github.com/identicon.png" width="80" style="border-radius:50%"/>                    |
-| :------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: |
-|                                                        **Mourad Ben Abdallah**                                                         |                                                    **Aziz Ben Hmida**                                                    |
-|                                                  Backend · Auth · Categories · Emails                                                  |                                       Frontend · Dashboard · Transactions · Admin                                        |
-| [![GitHub](https://img.shields.io/badge/GitHub-mouradbenabdallah-181717?style=flat&logo=github)](https://github.com/mouradbenabdallah) | [![GitHub](https://img.shields.io/badge/GitHub-Aziz481450-181717?style=flat&logo=github)](https://github.com/Aziz481450) |
+|                       <img src="https://github.com/mouradbenabdallah.png" width="80" style="border-radius:50%"/>                       |                    <img src="https://github.com/identicon.png" width="80" style="border-radius:50%"/>                    |                    <img src="https://github.com/identicon.png" width="80" style="border-radius:50%"/>                    |
+| :------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: |
+|                                                        **Mourad Ben Abdallah**                                                         |                                                    **Aziz Ben Hmida**                                                    |                                                   **Belhsan Jeiday**                                                    |
+|                                                  Backend · Auth · Categories · Emails                                                  |                                       Frontend · Dashboard · Transactions · Admin                                        |                                                     _Role TBD_                                                      |
+| [![GitHub](https://img.shields.io/badge/GitHub-mouradbenabdallah-181717?style=flat&logo=github)](https://github.com/mouradbenabdallah) | [![GitHub](https://img.shields.io/badge/GitHub-Aziz481450-181717?style=flat&logo=github)](https://github.com/Aziz481450) | [![Email](https://img.shields.io/badge/Email-jb14job-D14836?style=flat&logo=gmail&logoColor=white)](mailto:jb14job@gmail.com) |
 
 <br/>
 

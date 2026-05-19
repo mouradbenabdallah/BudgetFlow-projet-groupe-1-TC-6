@@ -52,6 +52,10 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
                 </div>
 
                 <div class="bf-dashboard" aria-label="Aperçu du tableau de bord BudgetFlow">
+                    <img src="/img/dashboard.png" alt="Tableau de bord BudgetFlow" class="bf-dashboard-img">
+                </div>
+
+                <div class="bf-dashboard" aria-label="Aperçu du tableau de bord BudgetFlow">
                     <div class="bf-window-top">
                         <span class="bf-dot bf-dot-danger"></span>
                         <span class="bf-dot bf-dot-warning"></span>
@@ -110,7 +114,7 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
 
         <section class="bf-stats-band">
             <div class="bf-container bf-stats">
-                <div class="bf-stat"><strong>2.4M+</strong><span>Utilisateurs Actifs</span></div>
+                <div class="bf-stat"><strong>2k+</strong><span>Utilisateurs Actifs</span></div>
                 <div class="bf-stat"><strong>3.6M TND</strong><span>Budgets Gérés</span></div>
                 <div class="bf-stat"><strong>99.9%</strong><span>Disponibilité SLA</span></div>
                 <div class="bf-stat"><strong>4.9★</strong><span>Note Moyenne</span></div>

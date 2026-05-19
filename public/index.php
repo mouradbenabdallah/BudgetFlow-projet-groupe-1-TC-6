@@ -15,6 +15,7 @@ require_once __DIR__ . '/../app/controllers/AuthController.php';
 require_once __DIR__ . '/../app/controllers/DashboardController.php';
 require_once __DIR__ . '/../app/controllers/TransactionController.php';
 require_once __DIR__ . '/../app/controllers/CategoryController.php';
+require_once __DIR__ . '/../app/controllers/BudgetController.php';
 
 $config = require __DIR__ . '/../config/config.php';
 date_default_timezone_set($config['app']['timezone']);
@@ -101,14 +102,51 @@ $router->get('/admin', function (): void {
     require __DIR__ . '/../app/views/admin_placeholder.php';
 });
 
-// Sections en cours de développement.
-$router->get('/budgets/shared', function (): void {
+// Fonction 4 : gestion des budgets et collaboration.
+$router->get('/budgets', function (): void {
     Auth::requireRole('user');
-    $sectionTitle = 'Budgets partagés';
-    $sectionIcon = 'bi-people';
-    $sectionMessage = 'La gestion des budgets partagés sera bientôt disponible. Vous pourrez inviter des membres et suivre les dépenses communes.';
-    $pageTitle = $sectionTitle;
-    require __DIR__ . '/../app/views/section_placeholder.php';
+    $controller = new BudgetController();
+    $controller->index();
+});
+$router->get('/budgets/create', function (): void {
+    Auth::requireRole('user');
+    $controller = new BudgetController();
+    $controller->showCreate();
+});
+$router->post('/budgets/create', function (): void {
+    Auth::requireRole('user');
+    $controller = new BudgetController();
+    $controller->create();
+});
+$router->get('/budgets/show', function (): void {
+    Auth::requireRole('user');
+    $controller = new BudgetController();
+    $controller->show();
+});
+$router->get('/budgets/edit', function (): void {
+    Auth::requireRole('user');
+    $controller = new BudgetController();
+    $controller->showEdit();
+});
+$router->post('/budgets/edit', function (): void {
+    Auth::requireRole('user');
+    $controller = new BudgetController();
+    $controller->edit();
+});
+$router->post('/budgets/delete', function (): void {
+    Auth::requireRole('user');
+    $controller = new BudgetController();
+    $controller->delete();
+});
+$router->post('/budgets/invite', function (): void {
+    Auth::requireRole('user');
+    $controller = new BudgetController();
+    $controller->invite();
+});
+$router->post('/budgets/remove-member', function (): void {
+    Auth::requireRole('user');
+    $controller = new BudgetController();
+    $controller->removeMember();
 });
 
 $router->get('/analytics', function (): void {

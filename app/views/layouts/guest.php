@@ -10,6 +10,7 @@ $pageTitle = htmlspecialchars(($title ?? 'Authentification') . ' - BudgetFlow', 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="/style.css" rel="stylesheet">
+    <link rel="icon" href="/img/logo_fac.webp" type="image/webp">
 </head>
 <body class="bf-page-auth">
     <main class="bf-auth-shell">

@@ -1,7 +1,7 @@
 <?php
 // Sidebar authentifiée : liens principaux et résumé de l'utilisateur connecté.
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-$isActive = static fn (string $path): string => $currentPath === $path ? 'active' : '';
+$isActive = static fn (string $path): string => str_starts_with($currentPath, $path) ? 'active' : '';
 $escape = static fn (mixed $value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 
 $sidebarUser = $user ?? Auth::getUser() ?? [];
@@ -25,7 +25,6 @@ $mainNavigation = [
     ['path' => '/dashboard', 'label' => 'Tableau de bord', 'icon' => 'bi-grid'],
     ['path' => '/transactions', 'label' => 'Transactions', 'icon' => 'bi-arrow-left-right'],
     ['path' => '/budgets', 'label' => 'Budgets', 'icon' => 'bi-wallet2'],
-    ['path' => '/budgets/shared', 'label' => 'Budgets partagés', 'icon' => 'bi-people'],
     ['path' => '/categories', 'label' => 'Catégories', 'icon' => 'bi-tag'],
     ['path' => '/analytics', 'label' => 'Analyses', 'icon' => 'bi-graph-up-arrow'],
 ];

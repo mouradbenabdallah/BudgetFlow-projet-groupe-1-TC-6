@@ -116,7 +116,9 @@ class AuthController
         $this->session->set('email', (string) $user['email']);
         $this->session->set('role', (string) $user['role']);
 
-        $this->redirect('/dashboard');
+        // Redirect based on role - admin goes to /admin, user goes to /dashboard
+        $redirect = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
+        $this->redirect($redirect);
     }
 
     /**

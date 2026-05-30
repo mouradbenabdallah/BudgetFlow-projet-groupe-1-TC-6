@@ -197,7 +197,7 @@ class CategoryController
             return;
         }
 
-        $usedTransactions = $this->categories()->isUsedInTransactions($categoryId);
+        $usedTransactions = $this->categories()->countTransactions($categoryId);
         $this->categories()->delete($categoryId);
 
         if ($usedTransactions > 0) {

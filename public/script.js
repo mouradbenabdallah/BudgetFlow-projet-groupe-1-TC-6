@@ -350,19 +350,25 @@
 
   // === Transactions Index Page ===
   function initTransactionsIndexPage() {
+    // Type toggle dans le modal (Dépense / Revenu)
     document.querySelectorAll('.bf-type-toggle-dark').forEach(function (button) {
       button.addEventListener('click', function () {
-        document.querySelectorAll('.bf-type-toggle-dark').forEach(function (b) { b.classList.remove('active'); });
-        this.classList.add('active');
-        document.getElementById('transaction-type-input').value = this.dataset.type;
+        var type = this.dataset.type;
+        document.querySelectorAll('.bf-type-toggle-dark').forEach(function (b) {
+          b.classList.remove('active-expense', 'active-income');
+        });
+        this.classList.add('active-' + type);
+        var hiddenInput = document.getElementById('modal-transaction-type');
+        if (hiddenInput) { hiddenInput.value = type; }
       });
     });
 
+    // Filtres avancés — toggle via classList pour respecter CSS
     var filtersToggle = document.getElementById('filtersToggle');
     var advancedFilters = document.getElementById('advancedFilters');
     if (filtersToggle && advancedFilters) {
       filtersToggle.addEventListener('click', function () {
-        advancedFilters.style.display = advancedFilters.style.display === 'none' ? '' : 'none';
+        advancedFilters.classList.toggle('bf-display-none');
         filtersToggle.classList.toggle('is-active');
       });
     }

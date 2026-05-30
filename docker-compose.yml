@@ -47,6 +47,11 @@ services:
     image: postgres:16-alpine
     container_name: budgetflow_postgres
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U budgetflow -d budgetflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
       # Identifiants initiaux de la base. Ils doivent correspondre à DB_* côté PHP.
       POSTGRES_DB: budgetflow

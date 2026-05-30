@@ -202,11 +202,20 @@ class AuthController
 
     /**
      * Destroy the user session and redirect to login.
+     * Only accepts POST requests with valid CSRF token.
      */
     public function logout(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            CSRF::validateToken((string) ($_POST['csrf_token'] ?? ''));
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo '405 - Method Not Allowed';
+            return;
+        }
+
+        if (!CSRF::validateToken((string) ($_POST['csrf_token'] ?? ''))) {
+            http_response_code(403);
+            echo '403 - Forbidden';
+            return;
         }
 
         $this->session->destroy();

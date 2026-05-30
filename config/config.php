@@ -10,7 +10,7 @@ return [
     ],
     'database' => [
         // Dans Docker, DB_HOST doit rester "postgres" : c'est le nom du service Compose.
-        'host' => getenv('DB_HOST') ?: 'postgres',
+        'host' => getenv('DB_HOST') ?: 'db',
         'port' => getenv('DB_PORT') ?: '5432',
         'name' => getenv('DB_NAME') ?: 'budgetflow',
         'user' => getenv('DB_USER') ?: 'budgetflow',

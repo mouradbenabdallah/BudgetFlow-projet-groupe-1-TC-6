@@ -1,25 +1,57 @@
 <?php
-$e = static fn (mixed $value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
-$formatDT = static fn (mixed $amount): string => number_format((float) $amount, 0, ',', ' ') . ' DT';
-$formatDTPrecise = static fn (mixed $amount): string => number_format((float) $amount, 0, ',', ' ');
+/**
+ * Vue : Détail d'un budget partagé (Shared Budget Detail)
+ *
+ * Layout inspiré de l'image budget_partager.png :
+ * - Sidebar gauche : liste des groupes/budgets partagés
+ * - Panneau sombre droit : détails du budget, progression, membres
+ * - Panneau blanc : transactions avec formulaire inline
+ *
+ * Design system : MongoDB-inspired (design.md)
+ * - Forest black (#001e2b) pour les panneaux sombres
+ * - MongoDB Green (#00ed64) comme accent
+ * - Source Code Pro uppercase pour les labels techniques
+ * - Ombres teintées teal : rgba(0,30,43,0.12)
+ */
 
+$e = static fn (mixed $value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+$formatDT = static fn (mixed $amount): string => number_format((float) $amount, 2, ',', ' ') . ' DT';
+
+/** Données injectées par le contrôleur */
 $budget = $budget ?? [];
 $isOwner = $isOwner ?? false;
 $members = $members ?? [];
+$memberContributions = $memberContributions ?? [];
 $transactions = $transactions ?? [];
-$categoryBreakdown = $categoryBreakdown ?? [];
+$categories = $categories ?? [];
 $percent = $percent ?? 0;
 $status = $status ?? 'ok';
-$typeFilter = $typeFilter ?? null;
 $userId = (int) ($user['id'] ?? 0);
 
-$periodLabels = ['weekly' => 'Hebdomadaire', 'monthly' => 'Mensuel', 'custom' => 'Personnalisé'];
+/** Calculs dérivés */
 $spent = (float) ($budget['spent'] ?? 0);
 $income = (float) ($budget['income'] ?? 0);
 $balance = (float) ($budget['balance'] ?? 0);
 $limit = $budget['amount_limit'] !== null ? (float) $budget['amount_limit'] : null;
 $remaining = $limit !== null ? $limit - $spent : null;
 
+/** Couleurs de progression selon le statut (design.md : danger/warning/ok) */
+$progressColor = match ($status) {
+    'danger' => '#FF4D4D',
+    'warning' => '#FFB547',
+    default => '#22D3A5',
+};
+
+/** Liste complète des membres (propriétaire + membres invités) */
+$ownerData = ['id' => $userId, 'name' => $user['name'] ?? 'Propriétaire', 'email' => $user['email'] ?? ''];
+$allMembers = array_merge([$ownerData], $members);
+$memberCount = count($allMembers);
+
+/** Budgets partagés pour la sidebar gauche */
+$sharedBudgets = $sharedBudgets ?? [];
+$currentBudgetId = (int) ($budget['id'] ?? 0);
+
+/** Génère les initiales d'un nom (ex: "Alex Johnson" → "AJ") */
 function bfShowGetInitials(string $name): string {
     $parts = explode(' ', trim($name), 2);
     $i = '';
@@ -28,429 +60,304 @@ function bfShowGetInitials(string $name): string {
     elseif (!empty($parts[0]) && strlen($parts[0]) > 1) $i = strtoupper(substr($parts[0], 0, 2));
     return $i ?: '?';
 }
-
-$progressColor = match ($status) {
-    'danger' => '#e11d48',
-    'warning' => '#f59e0b',
-    default => '#00ed64',
-};
-
-$chartColors = [];
-$chartLabels = [];
-$chartValues = [];
-foreach ($categoryBreakdown as $c) {
-    $chartColors[] = preg_match('/^#[0-9A-Fa-f]{6}$/', ($c['color'] ?? '')) ? $c['color'] : '#007f5f';
-    $chartLabels[] = $c['name'] ?? '';
-    $chartValues[] = (float) ($c['total'] ?? 0);
-}
-
-$ownerData = ['id' => $userId, 'name' => $user['name'] ?? 'Propriétaire', 'email' => $user['email'] ?? ''];
-$allMembers = array_merge([$ownerData], $members);
-$memberCount = count($allMembers);
 ?>
 
-<style>
-.bf-show-page { background: #f5f7fa; min-height: 100vh; }
-.bf-show-page .bf-topbar { background: #ffffff; border-bottom: 1px solid #e2e8f0; }
+<div class="bf-page">
 
-.bf-show-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
-.bf-show-title { font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 4px; }
-.bf-show-subtitle { font-size: 13px; color: #64748b; margin: 0; display: flex; align-items: center; gap: 8px; }
-.bf-show-badge {
-    display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
-    border-radius: 999px; font-size: 11px; font-weight: 600;
-}
-.bf-show-badge.shared { background: rgba(99,102,241,0.1); color: #6366f1; }
-.bf-show-badge.personal { background: rgba(0,127,95,0.1); color: #007f5f; }
+    <!-- ============================================================
+         SIDEBAR GAUCHE — Liste des groupes/budgets partagés
+         ============================================================ -->
+    <aside class="bf-shared-sidebar">
+        <p class="bf-shared-sidebar-title">
+            Mes groupes <span class="count">(<?= count($sharedBudgets) ?>)</span>
+            <a href="/budgets/create" class="bf-btn-new"><i class="bi bi-plus"></i> Nouveau</a>
+        </p>
 
-.bf-show-actions { display: flex; gap: 8px; }
-.bf-show-btn {
-    display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
-    border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
-    text-decoration: none; border: 1px solid #e2e8f0; background: #fff; color: #64748b;
-    transition: all 0.2s;
-}
-.bf-show-btn:hover { border-color: #cbd5e1; color: #0f172a; }
-.bf-show-btn.danger { border-color: #fca5a5; color: #dc2626; }
-.bf-show-btn.danger:hover { background: #fef2f2; }
+        <?php foreach ($sharedBudgets as $sb): ?>
+        <?php
+            $sbSpent = (float) ($sb['spent'] ?? 0);
+            $sbLimit = $sb['amount_limit'] !== null ? (float) $sb['amount_limit'] : 0;
+            $sbPct = $sbLimit > 0 ? min(100, ($sbSpent / $sbLimit) * 100) : 0;
+            $sbFillClass = $sbPct >= 100 ? 'danger' : ($sbPct >= 80 ? 'warning' : '');
+            $sbMembers = $sb['members'] ?? [];
+            $sbActive = (int) ($sb['id'] ?? 0) === $currentBudgetId;
+            $sbMemberCount = count($sbMembers) + 1;
+        ?>
+        <a href="/budgets/show?id=<?= $e((int) ($sb['id'] ?? 0)) ?>" class="bf-group-card <?= $sbActive ? 'active' : '' ?>">
+            <div class="bf-group-card-header">
+                <div>
+                    <p class="bf-group-card-name"><?= $e($sb['name'] ?? 'Budget') ?></p>
+                    <p class="bf-group-card-period"><?= $sbMemberCount ?> membre<?= $sbMemberCount > 1 ? 's' : '' ?></p>
+                </div>
+                <div class="bf-group-card-members">
+                    <?php foreach (array_slice($sbMembers, 0, 3) as $m): ?>
+                    <span class="bf-group-avatar" title="<?= $e($m['name'] ?? '') ?>"><?= bfShowGetInitials($m['name'] ?? '') ?></span>
+                    <?php endforeach; ?>
+                    <?php if (count($sbMembers) > 3): ?><span class="bf-group-avatar" style="background:#5c6c75">+<?= count($sbMembers) - 3 ?></span><?php endif; ?>
+                </div>
+            </div>
+            <?php if ($sbLimit > 0): ?>
+            <div class="bf-group-progress" style="background:<?= $sbActive ? '#3d4f58' : '#f0f2f2' ?>">
+                <span class="bf-group-progress-fill <?= $sbFillClass ?>" style="width:<?= $sbPct ?>%"></span>
+            </div>
+            <?php else: ?>
+            <div style="height:4px;background:<?= $sbActive ? '#3d4f58' : '#f0f2f2' ?>;border-radius:2px;margin-bottom:6px"></div>
+            <?php endif; ?>
+            <div class="bf-group-card-footer">
+                <span class="bf-group-spent"><?= $formatDT($sbSpent) ?> dépensé</span>
+                <span class="bf-group-pct" style="color:<?= $sbFillClass === 'danger' ? '#FF4D4D' : ($sbFillClass === 'warning' ? '#FFB547' : '#00ed64') ?>"><?= number_format($sbPct, 0) ?>%</span>
+            </div>
+        </a>
+        <?php endforeach; ?>
 
-.bf-show-alert {
-    padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; font-weight: 600;
-    display: flex; align-items: center; gap: 10px;
-}
-.bf-show-alert.warning { background: rgba(255,181,71,0.1); border: 1px solid rgba(255,181,71,0.3); color: #FFB547; }
-.bf-show-alert.danger { background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.3); color: #FF4D4D; }
-
-.bf-show-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
-.bf-show-kpi-card {
-    background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-.bf-show-kpi-card .kpi-label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px; }
-.bf-show-kpi-card .kpi-value { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0; font-family: var(--bf-font-mono); }
-.bf-show-kpi-card .kpi-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; margin-bottom: 12px; }
-
-.bf-show-budget-panel {
-    background: var(--bf-sidebar); color: #fff; border-radius: 16px; padding: 28px;
-    margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,30,43,0.3);
-}
-.bf-show-budget-panel-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
-.bf-show-budget-panel-name { font-size: 22px; font-weight: 800; margin: 0 0 4px; }
-.bf-show-budget-panel-meta { font-size: 13px; color: rgba(216,231,228,0.6); margin: 0; }
-.bf-show-budget-panel-amount { text-align: right; }
-.bf-show-budget-panel-spent { font-size: 32px; font-weight: 800; font-family: var(--bf-font-mono); margin: 0; }
-.bf-show-budget-panel-limit { font-size: 13px; color: rgba(216,231,228,0.5); margin: 0; }
-
-.bf-show-progress-track { height: 12px; border-radius: 999px; background: rgba(255,255,255,0.1); overflow: hidden; margin-bottom: 12px; }
-.bf-show-progress-fill { height: 100%; border-radius: 999px; transition: width 0.3s; }
-.bf-show-progress-info { display: flex; justify-content: space-between; font-size: 14px; }
-.bf-show-progress-pct { font-weight: 700; }
-.bf-show-progress-remaining { color: rgba(216,231,228,0.6); }
-
-.bf-show-members-panel {
-    background: var(--bf-sidebar); color: #fff; border-radius: 16px; padding: 28px;
-    margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,30,43,0.3);
-}
-.bf-show-panel-title { font-size: 13px; font-weight: 600; color: rgba(216,231,228,0.4); text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px; }
-.bf-show-panel-heading { font-size: 18px; font-weight: 700; margin: 0 0 20px; display: flex; align-items: center; gap: 8px; }
-.bf-show-panel-heading i { color: var(--bf-green); }
-
-.bf-show-member-row {
-    display: flex; align-items: center; gap: 14px; padding: 14px 16px;
-    background: rgba(255,255,255,0.06); border-radius: 12px; margin-bottom: 8px;
-}
-.bf-show-member-avatar {
-    width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
-    font-size: 13px; font-weight: 700; flex-shrink: 0; position: relative;
-}
-.bf-show-member-avatar.owner { background: #007f5f; color: #fff; }
-.bf-show-member-avatar.member { background: #334155; color: #E2E8F0; }
-.bf-show-member-avatar .owner-badge {
-    position: absolute; top: -2px; right: -2px; width: 16px; height: 16px;
-    background: #f59e0b; border-radius: 50%; border: 2px solid var(--bf-sidebar);
-    display: grid; place-items: center; font-size: 9px; color: #fff;
-}
-.bf-show-member-info { flex: 1; min-width: 0; }
-.bf-show-member-name { font-size: 14px; font-weight: 600; margin: 0; }
-.bf-show-member-email { font-size: 12px; color: rgba(216,231,228,0.5); margin: 0; }
-.bf-show-member-remove {
-    background: none; border: none; color: rgba(216,231,228,0.4); cursor: pointer;
-    padding: 6px; border-radius: 8px; font-size: 16px; transition: all 0.2s;
-}
-.bf-show-member-remove:hover { color: #e11d48; background: rgba(225,29,72,0.1); }
-
-.bf-show-invite-form { display: flex; gap: 8px; margin-top: 16px; }
-.bf-show-invite-input {
-    flex: 1; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 10px; background: rgba(255,255,255,0.06); color: #fff;
-    font-size: 14px; outline: none;
-}
-.bf-show-invite-input::placeholder { color: rgba(216,231,228,0.3); }
-.bf-show-invite-input:focus { border-color: var(--bf-green); }
-.bf-show-invite-btn {
-    padding: 10px 20px; background: var(--bf-green-dark); color: #fff; border: none;
-    border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
-    white-space: nowrap; transition: all 0.2s;
-}
-.bf-show-invite-btn:hover { background: #009a6e; }
-
-.bf-show-transactions-panel {
-    background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 28px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-.bf-show-tx-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
-.bf-show-tx-title { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; }
-
-.bf-show-tx-tabs { display: flex; gap: 4px; margin-bottom: 16px; }
-.bf-show-tx-tab {
-    padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500;
-    text-decoration: none; transition: all 0.2s;
-}
-.bf-show-tx-tab.active { background: var(--bf-sidebar); color: #fff; }
-.bf-show-tx-tab:not(.active) { background: transparent; border: 1px solid #e2e8f0; color: #64748b; }
-.bf-show-tx-tab:not(.active):hover { border-color: #cbd5e1; color: #0f172a; }
-.bf-show-tx-tab.income.active { background: rgba(0,237,100,0.15); color: #007f5f; border-color: rgba(0,237,100,0.2); }
-.bf-show-tx-tab.expense.active { background: rgba(225,29,72,0.1); color: #dc2626; border-color: rgba(225,29,72,0.15); }
-
-.bf-show-tx-row {
-    display: flex; align-items: center; gap: 14px; padding: 16px 0;
-    border-bottom: 1px solid #f1f5f9;
-}
-.bf-show-tx-row:last-child { border-bottom: none; }
-.bf-show-tx-avatar {
-    width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
-    font-size: 12px; font-weight: 700; background: rgba(99,102,241,0.1); color: #6366f1; flex-shrink: 0;
-}
-.bf-show-tx-info { flex: 1; min-width: 0; }
-.bf-show-tx-desc { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0; }
-.bf-show-tx-meta { font-size: 12px; color: #94a3b8; margin: 4px 0 0; }
-.bf-show-tx-meta strong { color: #007f5f; }
-.bf-show-tx-amount { text-align: right; flex-shrink: 0; }
-.bf-show-tx-amount-value { font-size: 16px; font-weight: 800; font-family: var(--bf-font-mono); margin: 0; }
-.bf-show-tx-amount-value.income { color: #007f5f; }
-.bf-show-tx-amount-value.expense { color: #dc2626; }
-.bf-show-tx-amount-per { font-size: 12px; color: #6366f1; margin: 2px 0 0; }
-.bf-show-tx-category {
-    display: inline-block; font-size: 11px; padding: 3px 10px;
-    background: #f1f5f9; border-radius: 999px; color: #64748b; margin-top: 6px;
-}
-
-.bf-show-empty-tx {
-    text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 14px;
-    border: 1px dashed #e2e8f0; border-radius: 12px;
-}
-
-.bf-show-chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-.bf-show-chart-panel {
-    background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-
-@media (max-width: 1200px) { .bf-show-kpi-row { grid-template-columns: repeat(2, 1fr); } .bf-show-chart-row { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .bf-show-kpi-row { grid-template-columns: 1fr; } }
-</style>
-
-<div class="bf-show-page">
-
-    <!-- Header -->
-    <div class="bf-show-header">
-        <div>
-            <h2 class="bf-show-title"><?= $e($budget['name'] ?? 'Budget') ?></h2>
-            <p class="bf-show-subtitle">
-                <?= $e($periodLabels[$budget['period'] ?? 'monthly'] ?? 'Mensuel') ?>
-                <?php if (($budget['type'] ?? '') === 'shared'): ?>
-                <span class="bf-show-badge shared"><i class="bi bi-people"></i> Partagé</span>
-                <?php else: ?>
-                <span class="bf-show-badge personal"><i class="bi bi-person"></i> Personnel</span>
-                <?php endif; ?>
-            </p>
-        </div>
-        <?php if ($isOwner): ?>
-        <div class="bf-show-actions">
-            <a href="/budgets/edit?id=<?= $e((int) ($budget['id'] ?? 0)) ?>" class="bf-show-btn">
-                <i class="bi bi-pencil"></i> Modifier
-            </a>
-            <form method="post" action="/budgets/delete" style="display:inline;">
-                <?= CSRF::getTokenField() ?>
-                <input type="hidden" name="id" value="<?= $e((int) ($budget['id'] ?? 0)) ?>">
-                <button type="submit" class="bf-show-btn danger" data-confirm="Supprimer ce budget ?">
-                    <i class="bi bi-trash"></i> Supprimer
-                </button>
-            </form>
+        <?php if (empty($sharedBudgets)): ?>
+        <div class="bf-empty-state-inline">
+            <i class="bi bi-people bf-icon-xl bf-text-muted bf-icon-block bf-mb-12"></i>
+            Aucun budget partagé. Créez-en un !
         </div>
         <?php endif; ?>
-    </div>
+    </aside>
 
-    <!-- Alertes budget -->
-    <?php if ($status === 'warning'): ?>
-    <div class="bf-show-alert warning">
-        <i class="bi bi-exclamation-triangle"></i>
-        Attention : vous avez consommé <?= number_format($percent, 0) ?>% de votre budget
-    </div>
-    <?php endif; ?>
-    <?php if ($status === 'danger'): ?>
-    <div class="bf-show-alert danger">
-        <i class="bi bi-x-circle"></i>
-        Budget dépassé de <?= number_format($overAmount, 0, ',', ' ') ?> DT
-    </div>
-    <?php endif; ?>
+    <!-- ============================================================
+         CONTENU PRINCIPAL — Panneaux droit
+         ============================================================ -->
+    <main class="bf-shared-main">
 
-    <!-- KPI Cards -->
-    <div class="bf-show-kpi-row">
-        <div class="bf-show-kpi-card">
-            <div class="kpi-icon" style="background:#ecfdf5;color:#059669"><i class="bi bi-graph-up-arrow"></i></div>
-            <p class="kpi-label">Revenus</p>
-            <p class="kpi-value" style="color:#059669">+<?= $formatDT($income) ?></p>
+        <!-- Alertes budget (warning ≥80%, danger ≥100%) -->
+        <?php if ($status === 'warning'): ?>
+        <div class="bf-alert bf-alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            Attention : vous avez consommé <?= number_format($percent, 0) ?>% de votre budget
         </div>
-        <div class="bf-show-kpi-card">
-            <div class="kpi-icon" style="background:#eff6ff;color:#2563eb"><i class="bi bi-receipt"></i></div>
-            <p class="kpi-label">Dépenses</p>
-            <p class="kpi-value" style="color:#2563eb">-<?= $formatDT($spent) ?></p>
+        <?php endif; ?>
+        <?php if ($status === 'danger'): ?>
+        <div class="bf-alert bf-alert-danger">
+            <i class="bi bi-x-circle"></i>
+            Budget dépassé de <?= number_format($overAmount ?? 0, 2, ',', ' ') ?> DT
         </div>
-        <div class="bf-show-kpi-card">
-            <div class="kpi-icon" style="background:<?= $balance >= 0 ? '#ecfdf5' : '#fef2f2' ?>;color:<?= $balance >= 0 ? '#059669' : '#dc2626' ?>"><i class="bi bi-<?= $balance >= 0 ? 'wallet2' : 'exclamation-triangle' ?>"></i></div>
-            <p class="kpi-label">Solde</p>
-            <p class="kpi-value" style="color:<?= $balance >= 0 ? '#059669' : '#dc2626' ?>"><?= $balance >= 0 ? '+' : '' ?><?= $formatDT($balance) ?></p>
-        </div>
-        <div class="bf-show-kpi-card">
-            <div class="kpi-icon" style="background:#fef3c7;color:#d97706"><i class="bi bi-wallet2"></i></div>
-            <p class="kpi-label">Restant</p>
-            <p class="kpi-value" style="color:<?= $remaining >= 0 ? '#059669' : '#dc2626' ?>"><?= $limit !== null ? $formatDT(abs($remaining)) : '∞' ?></p>
-        </div>
-    </div>
+        <?php endif; ?>
 
-    <!-- Budget Panel (dark) -->
-    <?php if ($limit !== null && $limit > 0): ?>
-    <div class="bf-show-budget-panel">
-        <div class="bf-show-budget-panel-header">
-            <div>
-                <p class="bf-show-budget-panel-name"><?= $e($budget['name'] ?? '') ?></p>
-                <p class="bf-show-budget-panel-meta"><?= $e($periodLabels[$budget['period'] ?? 'monthly'] ?? 'Mensuel') ?> • <?= date('d/m/Y', strtotime($budget['start_date'] ?? date('Y-m-d'))) ?></p>
-            </div>
-            <div class="bf-show-budget-panel-amount">
-                <p class="bf-show-budget-panel-spent"><?= $formatDT($spent) ?></p>
-                <p class="bf-show-budget-panel-limit">sur <?= $formatDT($limit) ?></p>
-            </div>
-        </div>
-        <div class="bf-show-progress-track">
-            <span class="bf-show-progress-fill" style="width:<?= min(100, $percent) ?>%;background:<?= $progressColor ?>"></span>
-        </div>
-        <div class="bf-show-progress-info">
-            <span class="bf-show-progress-pct" style="color:<?= $progressColor ?>"><?= number_format($percent, 0) ?>% utilisé</span>
-            <span class="bf-show-progress-remaining"><?= $remaining >= 0 ? '<span style="color:var(--bf-green);font-weight:700">' . $formatDT($remaining) . '</span> restant' : '<span style="color:#e11d48;font-weight:700">' . $formatDT(abs($remaining)) . '</span> dépassé' ?></span>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <!-- Charts Row -->
-    <?php if (!empty($categoryBreakdown)): ?>
-    <div class="bf-show-chart-row">
-        <div class="bf-show-chart-panel">
-            <p class="bf-show-panel-title">Répartition</p>
-            <h3 style="font-size:16px;font-weight:700;color:#0f172a;margin:0 0 16px">Dépenses par catégorie</h3>
-            <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
-                <div style="width:160px;height:160px;flex-shrink:0">
-                    <canvas id="categoryChart"
-                        data-colors="<?= htmlspecialchars(json_encode($chartColors), ENT_QUOTES, 'UTF-8') ?>"
-                        data-labels="<?= htmlspecialchars(json_encode($chartLabels), ENT_QUOTES, 'UTF-8') ?>"
-                        data-values="<?= htmlspecialchars(json_encode($chartValues), ENT_QUOTES, 'UTF-8') ?>">
-                    </canvas>
+        <!-- ============================================================
+             PANNEAU SOMBRE — Détails du budget + Membres
+             Design : #001e2b forest-black (design.md §1)
+             ============================================================ -->
+        <div class="bf-budget-detail-panel">
+            <div class="bf-budget-detail-header">
+                <div>
+                    <p class="bf-budget-detail-label">Shared Budget</p>
+                    <h2 class="bf-budget-detail-name"><?= $e($budget['name'] ?? 'Budget') ?></h2>
+                    <p class="bf-budget-detail-date">Créé le <?= date('d/m/Y', strtotime($budget['start_date'] ?? date('Y-m-d'))) ?></p>
                 </div>
-                <div style="flex:1;min-width:180px">
-                    <?php
-                    $totalCat = array_sum(array_column($categoryBreakdown, 'total'));
-                    foreach ($categoryBreakdown as $cat):
-                        $color = preg_match('/^#[0-9A-Fa-f]{6}$/', (string) ($cat['color'] ?? '')) === 1 ? (string) $cat['color'] : '#007f5f';
-                        $catPct = $totalCat > 0 ? ((float) $cat['total'] / $totalCat) * 100 : 0;
-                    ?>
-                    <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f1f5f9">
-                        <div style="width:10px;height:10px;border-radius:3px;flex-shrink:0;background:<?= $color ?>"></div>
-                        <span style="flex:1;font-size:13px;color:#0f172a"><?= $e($cat['name'] ?? '') ?></span>
-                        <span style="font-size:13px;font-weight:700;font-family:var(--bf-font-mono);color:#0f172a"><?= $formatDT($cat['total'] ?? 0) ?></span>
-                        <span style="font-size:12px;color:#94a3b8;min-width:40px;text-align:right"><?= number_format($catPct, 0) ?>%</span>
-                    </div>
-                    <?php endforeach; ?>
+                <div class="bf-budget-detail-amount">
+                    <p class="bf-budget-detail-spent"><?= $formatDT($spent) ?></p>
+                    <p class="bf-budget-detail-limit">sur <?= $limit !== null ? $formatDT($limit) : 'Illimité' ?> budget</p>
                 </div>
             </div>
-        </div>
-        <div class="bf-show-chart-panel">
-            <p class="bf-show-panel-title">Vue d'ensemble</p>
-            <h3 style="font-size:16px;font-weight:700;color:#0f172a;margin:0 0 16px">Revenus vs Dépenses</h3>
-            <div style="height:200px;display:grid;place-items:center;color:#94a3b8;font-size:14px">
-                <i class="bi bi-bar-chart-line" style="font-size:48px;color:#e2e8f0;display:block;margin-bottom:8px"></i>
-                Données mensuelles disponibles dans le tableau de bord
+
+            <?php if ($limit !== null && $limit > 0): ?>
+            <div class="bf-budget-progress-track">
+                <span class="bf-budget-progress-fill" style="width:<?= min(100, $percent) ?>%;background:<?= $progressColor ?>"></span>
             </div>
-        </div>
-    </div>
-    <?php endif; ?>
+            <div class="bf-budget-progress-info">
+                <span class="bf-budget-progress-pct" style="color:<?= $progressColor ?>"><?= number_format($percent, 0) ?>% utilisé</span>
+                <span class="bf-budget-progress-remaining"><?= $remaining >= 0 ? '<span style="color:#00ed64;font-weight:700">' . $formatDT($remaining) . '</span> restant' : '<span style="color:#FF4D4D;font-weight:700">' . $formatDT(abs($remaining)) . '</span> dépassé' ?></span>
+            </div>
+            <?php endif; ?>
 
-    <!-- Membres (budget partagé) -->
-    <?php if (($budget['type'] ?? '') === 'shared'): ?>
-    <div class="bf-show-members-panel">
-        <p class="bf-show-panel-title">Collaboration</p>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-            <h3 class="bf-show-panel-heading"><i class="bi bi-people"></i> Membres</h3>
-            <span style="color:rgba(216,231,228,0.5);font-size:13px"><?= $memberCount ?> membre<?= $memberCount > 1 ? 's' : '' ?></span>
-        </div>
+            <!-- ============================================================
+                 SECTION MEMBRES — Collaboration
+                 ============================================================ -->
+            <div class="bf-members-section">
+                <div class="bf-members-header">
+                    <p class="bf-members-title">Membres (<?= $memberCount ?>)</p>
+                    <?php if ($isOwner): ?>
+                    <button type="button" class="bf-btn-add-member" id="btnAddMember">
+                        <i class="bi bi-plus"></i> Ajouter membre
+                    </button>
+                    <?php endif; ?>
+                </div>
 
-        <?php foreach ($allMembers as $member): ?>
-        <div class="bf-show-member-row">
-            <div class="bf-show-member-avatar <?= ($member['id'] ?? 0) === $userId ? 'owner' : 'member' ?>">
-                <?= bfShowGetInitials($member['name'] ?? '') ?>
-                <?php if (($member['id'] ?? 0) === (int) ($budget['owner_id'] ?? 0)): ?>
-                <div class="owner-badge">★</div>
+                <!-- Formulaire d'invitation (caché par défaut, toggle via JS) -->
+                <?php if ($isOwner): ?>
+                <form method="post" action="/budgets/invite" class="bf-invite-form" id="inviteForm">
+                    <?= CSRF::getTokenField() ?>
+                    <input type="hidden" name="budget_id" value="<?= $e((int) ($budget['id'] ?? 0)) ?>">
+                    <input type="email" name="email" class="bf-invite-input" placeholder="membre@email.com" required>
+                    <button type="submit" class="bf-invite-btn"><i class="bi bi-check-lg"></i></button>
+                    <button type="button" class="bf-invite-cancel" id="btnCancelInvite"><i class="bi bi-x-lg"></i></button>
+                </form>
                 <?php endif; ?>
+
+                <!-- Liste des membres -->
+                <?php foreach ($allMembers as $member): ?>
+                <?php
+                    $contribData = null;
+                    foreach ($memberContributions as $mc) {
+                        if ((int) ($mc['id'] ?? 0) === (int) ($member['id'] ?? 0)) { $contribData = $mc; break; }
+                    }
+                    $contribAmount = $contribData !== null ? (float) ($contribData['contributed'] ?? 0) : 0;
+                ?>
+                <div class="bf-member-row">
+                    <div class="bf-member-avatar <?= ($member['id'] ?? 0) === $userId ? 'owner' : '' ?>">
+                        <?= bfShowGetInitials($member['name'] ?? '') ?>
+                        <?php if (($member['id'] ?? 0) === (int) ($budget['owner_id'] ?? 0)): ?>
+                        <div class="owner-badge">★</div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="bf-member-info">
+                        <p class="bf-member-name"><?= $e($member['name'] ?? '') ?></p>
+                        <p class="bf-member-email"><?= $e($member['email'] ?? '') ?></p>
+                    </div>
+                    <div class="bf-member-contrib">
+                        <p class="bf-member-contrib-amount">+<?= $formatDT($contribAmount) ?></p>
+                        <p class="bf-member-contrib-label">contribué</p>
+                    </div>
+                    <?php if ($isOwner && ($member['id'] ?? 0) !== $userId): ?>
+                    <form method="post" action="/budgets/remove-member" class="bf-form-display-inline">
+                        <?= CSRF::getTokenField() ?>
+                        <input type="hidden" name="budget_id" value="<?= $e((int) ($budget['id'] ?? 0)) ?>">
+                        <input type="hidden" name="user_id" value="<?= $e((int) ($member['id'] ?? 0)) ?>">
+                        <button type="submit" class="bf-member-remove" title="Retirer">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </form>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
             </div>
-            <div class="bf-show-member-info">
-                <p class="bf-show-member-name"><?= $e($member['name'] ?? '') ?></p>
-                <p class="bf-show-member-email"><?= $e($member['email'] ?? '') ?></p>
-            </div>
-            <?php if ($isOwner && ($member['id'] ?? 0) !== $userId): ?>
-            <form method="post" action="/budgets/remove-member" style="display:inline;">
-                <?= CSRF::getTokenField() ?>
-                <input type="hidden" name="budget_id" value="<?= $e((int) ($budget['id'] ?? 0)) ?>">
-                <input type="hidden" name="user_id" value="<?= $e((int) ($member['id'] ?? 0)) ?>">
-                <button type="submit" class="bf-show-member-remove" title="Retirer">
-                    <i class="bi bi-x-lg"></i>
+        </div>
+
+        <!-- ============================================================
+             PANNEAU TRANSACTIONS — Fond blanc (dual-mode design.md)
+             ============================================================ -->
+        <div class="bf-tx-panel">
+            <div class="bf-tx-header">
+                <div>
+                    <p class="bf-tx-label">Group Transactions</p>
+                    <h3 class="bf-tx-title">Dépenses partagées</h3>
+                </div>
+                <button type="button" class="bf-btn-add-tx" id="btnAddTx">
+                    <i class="bi bi-plus"></i> Ajouter dépense
                 </button>
-            </form>
+            </div>
+
+            <!-- Formulaire ajouter dépense (caché par défaut, toggle via JS) -->
+            <div class="bf-add-tx-form" id="addTxForm">
+                <div class="bf-add-tx-form-inner">
+                    <form method="post" action="/transactions/create">
+                        <?= CSRF::getTokenField() ?>
+                        <input type="hidden" name="budget_id" value="<?= $e((int) ($budget['id'] ?? 0)) ?>">
+                        <input type="hidden" name="type" value="expense">
+                        <div class="bf-add-tx-row">
+                            <div class="bf-add-tx-field">
+                                <label>Description</label>
+                                <input type="text" name="description" class="bf-add-tx-input" placeholder="ex: Courses" required>
+                            </div>
+                            <div class="bf-add-tx-field">
+                                <label>Montant (DT)</label>
+                                <input type="number" name="amount" class="bf-add-tx-input" placeholder="0.00" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <input type="hidden" name="user_id" value="<?= $e($userId) ?>">
+                        <div class="bf-add-tx-field">
+                            <label>Catégorie</label>
+                            <select name="category_id" class="bf-add-tx-select">
+                                <option value="">Sans catégorie</option>
+                                <?php foreach ($categories as $cat): ?>
+                                <option value="<?= $e((int) ($cat['id'] ?? 0)) ?>"><?= $e($cat['name'] ?? '') ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="bf-add-tx-actions">
+                            <button type="submit" class="bf-add-tx-submit"><i class="bi bi-check-lg bf-mr-4"></i> Ajouter dépense</button>
+                            <button type="button" class="bf-add-tx-cancel" id="btnCancelTx">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Liste des transactions -->
+            <?php if (empty($transactions)): ?>
+            <div class="bf-tx-empty">
+                <i class="bi bi-receipt bf-icon-2xl bf-muted-text-light bf-icon-block bf-mb-12"></i>
+                Aucune transaction pour ce budget.
+            </div>
+            <?php else: ?>
+            <?php foreach ($transactions as $tx): ?>
+            <?php
+                $categoryName = $tx['category_name'] ?? 'Sans catégorie';
+                $description = $tx['description'] ?? '';
+                $amount = (float) ($tx['amount'] ?? 0);
+                $dateFormatted = date('d/m/Y', strtotime($tx['date'] ?? ''));
+                $perPerson = $memberCount > 1 ? $amount / $memberCount : $amount;
+            ?>
+            <div class="bf-tx-row">
+                <div class="bf-tx-icon"><i class="bi bi-arrow-up-right"></i></div>
+                <div class="bf-tx-info">
+                    <p class="bf-tx-desc"><?= $e($description ?: $categoryName) ?></p>
+                    <p class="bf-tx-meta">Payé par <strong><?= $e($tx['user_name'] ?? '') ?></strong> · <?= $dateFormatted ?></p>
+                    <?php if ($memberCount > 1): ?>
+                    <div class="bf-tx-split">
+                        <span class="bf-tx-split-label">Partagé entre :</span>
+                        <?php foreach ($allMembers as $m): ?>
+                        <span class="bf-tx-split-member"><?= $e($m['name'] ?? '') ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <div class="bf-tx-amount">
+                    <p class="bf-tx-amount-value"><?= $formatDT($amount) ?></p>
+                    <?php if ($memberCount > 1): ?>
+                    <p class="bf-tx-amount-per"><?= $formatDT($perPerson) ?>/personne</p>
+                    <?php endif; ?>
+                    <span class="bf-tx-category"><?= $e($categoryName) ?></span>
+                </div>
+            </div>
+            <?php endforeach; ?>
             <?php endif; ?>
         </div>
-        <?php endforeach; ?>
 
-        <?php if ($isOwner): ?>
-        <form method="post" action="/budgets/invite" class="bf-show-invite-form">
-            <?= CSRF::getTokenField() ?>
-            <input type="hidden" name="budget_id" value="<?= $e((int) ($budget['id'] ?? 0)) ?>">
-            <input type="email" name="email" class="bf-show-invite-input" placeholder="membre@email.com" required>
-            <button type="submit" class="bf-show-invite-btn">
-                <i class="bi bi-envelope" style="margin-right:6px"></i> Inviter
-            </button>
-        </form>
-        <?php endif; ?>
-    </div>
-    <?php endif; ?>
-
-    <!-- Transactions -->
-    <div class="bf-show-transactions-panel">
-        <div class="bf-show-tx-header">
-            <div>
-                <p class="bf-show-panel-title">Historique</p>
-                <h3 class="bf-show-tx-title"><?= ($budget['type'] ?? '') === 'shared' ? 'Dépenses partagées' : 'Transactions' ?></h3>
-            </div>
-            <a href="/transactions/create?budget_id=<?= $e((int) ($budget['id'] ?? 0)) ?>" class="bf-btn-create" style="font-size:13px;padding:8px 18px">
-                <i class="bi bi-plus-lg"></i> Ajouter
-            </a>
-        </div>
-
-        <!-- Onglets filtre -->
-        <div class="bf-show-tx-tabs">
-            <a href="/budgets/show?id=<?= $e((int) ($budget['id'] ?? 0)) ?>" class="bf-show-tx-tab <?= $typeFilter === null ? 'active' : '' ?>">Toutes</a>
-            <a href="/budgets/show?id=<?= $e((int) ($budget['id'] ?? 0)) ?>&type=income" class="bf-show-tx-tab income <?= $typeFilter === 'income' ? 'active' : '' ?>">Revenus</a>
-            <a href="/budgets/show?id=<?= $e((int) ($budget['id'] ?? 0)) ?>&type=expense" class="bf-show-tx-tab expense <?= $typeFilter === 'expense' ? 'active' : '' ?>">Dépenses</a>
-        </div>
-
-        <?php if (empty($transactions)): ?>
-        <div class="bf-show-empty-tx">
-            <i class="bi bi-receipt" style="font-size:36px;color:#e2e8f0;display:block;margin-bottom:12px"></i>
-            Aucune transaction pour ce budget.
-        </div>
-        <?php else: ?>
-        <?php foreach ($transactions as $tx): ?>
-        <?php
-            $categoryName = $tx['category_name'] ?? 'Sans catégorie';
-            $description = $tx['description'] ?? '';
-            $amount = (float) ($tx['amount'] ?? 0);
-            $isIncome = ($tx['type'] ?? 'expense') === 'income';
-            $dateFormatted = date('d/m/Y', strtotime($tx['date'] ?? ''));
-            $perPerson = $memberCount > 1 ? $amount / $memberCount : $amount;
-        ?>
-        <div class="bf-show-tx-row">
-            <div class="bf-show-tx-avatar"><?= bfShowGetInitials($tx['user_name'] ?? '') ?></div>
-            <div class="bf-show-tx-info">
-                <p class="bf-show-tx-desc"><?= $e($description ?: $categoryName) ?></p>
-                <p class="bf-show-tx-meta">Payé par <strong><?= $e($tx['user_name'] ?? '') ?></strong> · <?= $dateFormatted ?></p>
-                <?php if (($budget['type'] ?? '') === 'shared' && $memberCount > 1): ?>
-                <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">
-                    <span style="font-size:11px;color:#94a3b8;margin-right:4px">Partagé entre :</span>
-                    <?php foreach ($allMembers as $m): ?>
-                    <span style="font-size:10px;padding:2px 8px;background:#f1f5f9;border-radius:999px;color:#64748b"><?= $e($m['name'] ?? '') ?></span>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-            </div>
-            <div class="bf-show-tx-amount">
-                <p class="bf-show-tx-amount-value <?= $isIncome ? 'income' : 'expense' ?>">
-                    <?= $isIncome ? '+' : '-' ?><?= $formatDT($amount) ?>
-                </p>
-                <?php if (($budget['type'] ?? '') === 'shared' && $memberCount > 1): ?>
-                <p class="bf-show-tx-amount-per"><?= $formatDT($perPerson) ?>/pers.</p>
-                <?php endif; ?>
-                <span class="bf-show-tx-category"><?= $e($categoryName) ?></span>
-            </div>
-        </div>
-        <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
-
+    </main>
 </div>
+
+<script>
+/**
+ * Toggle du formulaire d'invitation membre
+ * Utilise classList.toggle('show') au lieu de style.display
+ * pour respecter la cascade CSS
+ */
+(function() {
+    var btnAddMember = document.getElementById('btnAddMember');
+    var inviteForm = document.getElementById('inviteForm');
+    var btnCancelInvite = document.getElementById('btnCancelInvite');
+
+    if (btnAddMember && inviteForm) {
+        btnAddMember.addEventListener('click', function() {
+            inviteForm.classList.toggle('show');
+        });
+    }
+    if (btnCancelInvite && inviteForm) {
+        btnCancelInvite.addEventListener('click', function() {
+            inviteForm.classList.remove('show');
+        });
+    }
+
+    /**
+     * Toggle du formulaire d'ajout de dépense
+     */
+    var btnAddTx = document.getElementById('btnAddTx');
+    var addTxForm = document.getElementById('addTxForm');
+    var btnCancelTx = document.getElementById('btnCancelTx');
+
+    if (btnAddTx && addTxForm) {
+        btnAddTx.addEventListener('click', function() {
+            addTxForm.classList.toggle('show');
+        });
+    }
+    if (btnCancelTx && addTxForm) {
+        btnCancelTx.addEventListener('click', function() {
+            addTxForm.classList.remove('show');
+        });
+    }
+})();
+</script>

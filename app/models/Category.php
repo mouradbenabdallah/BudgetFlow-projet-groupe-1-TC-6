@@ -121,11 +121,28 @@ class Category
     }
 
     /**
+     * Count how many transactions reference a given category.
+     *
+     * @param int $categoryId The category ID
+     * @return int Number of transactions using this category
+     */
+    public function countTransactions(int $categoryId): int
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM transactions WHERE category_id = :category_id'
+        );
+        $statement->bindValue(':category_id', $categoryId, PDO::PARAM_INT);
+        $statement->execute();
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /**
      * Delete a category.
-     * 
+     *
      * Note: Transactions referencing this category will have category_id set to NULL
      * due to the ON DELETE SET NULL constraint.
-     * 
+     *
      * @param int $id The category ID
      * @return bool True on success
      */

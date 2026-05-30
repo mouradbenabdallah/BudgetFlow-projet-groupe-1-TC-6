@@ -5,165 +5,164 @@ $errors = $errors ?? [];
 $mode = ($mode ?? 'create') === 'edit' ? 'edit' : 'create';
 $action = (string) ($action ?? ($mode === 'edit' ? '/budgets/edit' : '/budgets/create'));
 
-$nameValue = (string) ($budget['name'] ?? '');
-$selectedType = (string) ($budget['type'] ?? 'personal');
-$selectedPeriod = (string) ($budget['period'] ?? 'monthly');
-$amountLimitValue = $budget['amount_limit'] !== null ? number_format((float) $budget['amount_limit'], 0, '.', '') : '';
-$startDateValue = (string) ($budget['start_date'] ?? date('Y-m-d'));
+$nameValue       = (string) ($budget['name'] ?? '');
+$selectedType    = (string) ($budget['type'] ?? 'personal');
+$selectedPeriod  = (string) ($budget['period'] ?? 'monthly');
+$amountLimitValue = ($budget['amount_limit'] ?? null) !== null ? number_format((float) $budget['amount_limit'], 2, '.', '') : '';
+$startDateValue  = (string) ($budget['start_date'] ?? date('Y-m-d'));
 $minDate = '2000-01-01';
 $maxDate = date('Y-m-d', strtotime('+1 year'));
 ?>
 
-<style>
-.bf-form-page { background: #f5f7fa; min-height: 100vh; }
-.bf-form-shell { max-width: 600px; margin: 0 auto; }
+<!-- Dark overlay -->
+<div style="min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:32px 24px;background:rgba(0,30,43,0.7)">
 
-.bf-form-card {
-    background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-.bf-form-card-title { font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 4px; }
-.bf-form-card-subtitle { font-size: 14px; color: #64748b; margin: 0 0 24px; }
-.bf-form-kicker { font-size: 11px; font-weight: 600; color: var(--bf-green-dark); text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px; }
+<div style="width:100%;max-width:480px;background:#1c2d38;border:1px solid #3d4f58;border-radius:16px;overflow:hidden;box-shadow:rgba(0,30,43,0.5) 0px 24px 60px">
 
-.bf-form-group { margin-bottom: 20px; }
-.bf-form-label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-.bf-form-input {
-    width: 100%; min-height: 48px; padding: 12px 16px; border: 1px solid #e2e8f0;
-    border-radius: 10px; background: #ffffff; color: #0f172a; font-size: 15px;
-    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-}
-.bf-form-input:focus { border-color: var(--bf-green-dark); box-shadow: 0 0 0 3px rgba(0,127,95,0.1); }
-.bf-form-input.is-invalid { border-color: #e11d48; }
-.bf-form-input::placeholder { color: #cbd5e1; }
-
-.bf-form-error { font-size: 12px; color: #e11d48; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
-
-.bf-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-.bf-type-toggle-group { display: flex; gap: 12px; }
-.bf-type-toggle-btn {
-    flex: 1; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px;
-    background: #ffffff; cursor: pointer; text-align: center; font-size: 14px;
-    font-weight: 600; color: #94a3b8; display: flex; align-items: center;
-    justify-content: center; gap: 8px; transition: all 0.2s;
-}
-.bf-type-toggle-btn:hover { border-color: #cbd5e1; }
-.bf-type-toggle-btn.active { border-color: var(--bf-green-dark); background: rgba(0,127,95,0.06); color: var(--bf-green-dark); }
-
-.bf-form-input-wrap { position: relative; }
-.bf-form-input-prefix {
-    position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-    color: #94a3b8; font-size: 15px; font-weight: 600; pointer-events: none;
-}
-.bf-form-input-wrap .bf-form-input { padding-left: 44px; }
-
-.bf-form-submit {
-    width: 100%; padding: 14px; background: var(--bf-sidebar); color: #fff; border: none;
-    border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer;
-    transition: all 0.2s; font-family: var(--bf-font-ui);
-}
-.bf-form-submit:hover { background: #003d4d; transform: translateY(-1px); }
-
-.bf-form-back { text-align: center; margin-top: 16px; }
-.bf-form-back a { color: #64748b; text-decoration: none; font-size: 14px; font-weight: 500; }
-.bf-form-back a:hover { color: #0f172a; }
-
-.bf-form-alert {
-    padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 13px;
-    display: flex; align-items: center; gap: 10px;
-}
-.bf-form-alert.danger { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
-
-@media (max-width: 768px) { .bf-form-row { grid-template-columns: 1fr; } }
-</style>
-
-<div class="bf-form-page">
-    <div class="bf-form-shell">
-        <div class="bf-form-card">
-            <p class="bf-form-kicker">Budget</p>
-            <h2 class="bf-form-card-title"><?= $mode === 'edit' ? 'Modifier le budget' : 'Nouveau budget' ?></h2>
-            <p class="bf-form-card-subtitle"><?= $mode === 'edit' ? 'Modifiez les paramètres de votre budget.' : 'Créez un nouveau budget pour suivre vos dépenses.' ?></p>
-
-            <?php if (!empty($flashDanger)): ?>
-            <div class="bf-form-alert danger"><i class="bi bi-x-circle"></i> <?= $e($flashDanger) ?></div>
-            <?php endif; ?>
-            <?php if (!empty($errors['form'])): ?>
-            <div class="bf-form-alert danger"><i class="bi bi-x-circle"></i> <?= $e($errors['form']) ?></div>
-            <?php endif; ?>
-
-            <form method="post" action="<?= $e($action) ?>" novalidate>
-                <?= CSRF::getTokenField() ?>
-                <?php if ($mode === 'edit'): ?>
-                <input type="hidden" name="id" value="<?= $e((int) ($budget['id'] ?? 0)) ?>">
-                <?php endif; ?>
-                <input type="hidden" id="budget-type" name="type" value="<?= $e($selectedType) ?>">
-
-                <!-- Nom -->
-                <div class="bf-form-group">
-                    <label class="bf-form-label" for="budget-name">Nom du budget</label>
-                    <input class="bf-form-input <?= !empty($errors['name']) ? 'is-invalid' : '' ?>" id="budget-name" type="text" name="name" maxlength="100"
-                        value="<?= $e($nameValue) ?>" placeholder="Ex : Alimentation, Transport…" required>
-                    <?php if (!empty($errors['name'])): ?>
-                    <div class="bf-form-error"><i class="bi bi-exclamation-circle"></i> <?= $e($errors['name']) ?></div>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Type -->
-                <div class="bf-form-group">
-                    <label class="bf-form-label">Type de budget</label>
-                    <div class="bf-type-toggle-group">
-                        <button class="bf-type-toggle-btn <?= $selectedType === 'personal' ? 'active' : '' ?>" type="button" data-budget-type="personal">
-                            <i class="bi bi-person" style="font-size:18px"></i> Personnel
-                        </button>
-                        <button class="bf-type-toggle-btn <?= $selectedType === 'shared' ? 'active' : '' ?>" type="button" data-budget-type="shared">
-                            <i class="bi bi-people" style="font-size:18px"></i> Partagé
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Période + Date -->
-                <div class="bf-form-row">
-                    <div class="bf-form-group">
-                        <label class="bf-form-label" for="budget-period">Période</label>
-                        <select class="bf-form-input" id="budget-period" name="period" style="cursor:pointer">
-                            <option value="monthly" <?= $selectedPeriod === 'monthly' ? 'selected' : '' ?>>Mensuel</option>
-                            <option value="weekly" <?= $selectedPeriod === 'weekly' ? 'selected' : '' ?>>Hebdomadaire</option>
-                            <option value="custom" <?= $selectedPeriod === 'custom' ? 'selected' : '' ?>>Personnalisé</option>
-                        </select>
-                    </div>
-                    <div class="bf-form-group" id="start-date-group" style="display: <?= $selectedPeriod === 'custom' ? 'block' : 'none' ?>">
-                        <label class="bf-form-label" for="budget-start">Date de début</label>
-                        <input class="bf-form-input" id="budget-start" type="date" name="start_date"
-                            min="<?= $e($minDate) ?>" max="<?= $e($maxDate) ?>" value="<?= $e($startDateValue) ?>">
-                    </div>
-                </div>
-
-                <!-- Limite -->
-                <div class="bf-form-group">
-                    <label class="bf-form-label" for="budget-limit">
-                        Limite du budget <span style="color:#94a3b8;font-weight:400">(optionnel)</span>
-                    </label>
-                    <div class="bf-form-input-wrap">
-                        <span class="bf-form-input-prefix">DT</span>
-                        <input class="bf-form-input <?= !empty($errors['amount_limit']) ? 'is-invalid' : '' ?>" id="budget-limit" type="number" step="1" min="0" name="amount_limit"
-                            value="<?= $e($amountLimitValue) ?>" placeholder="Pas de limite">
-                    </div>
-                    <?php if (!empty($errors['amount_limit'])): ?>
-                    <div class="bf-form-error"><i class="bi bi-exclamation-circle"></i> <?= $e($errors['amount_limit']) ?></div>
-                    <?php endif; ?>
-                </div>
-
-                <button type="submit" class="bf-form-submit">
-                    <?= $mode === 'edit' ? 'Enregistrer les modifications' : 'Créer le budget' ?>
-                </button>
-            </form>
-
-            <div class="bf-form-back">
-                <a href="/budgets"><i class="bi bi-arrow-left" style="margin-right:4px"></i> Retour aux budgets</a>
-            </div>
+    <!-- Modal header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:24px 28px;border-bottom:1px solid #3d4f58">
+        <div>
+            <span style="font-family:'Source Code Pro',monospace;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#00ed64;display:block;margin-bottom:4px">
+                <?= $mode === 'edit' ? 'Modifier' : 'Nouveau' ?> Budget
+            </span>
+            <h2 style="font-size:20px;font-weight:600;color:#fff;margin:0">
+                <?= $mode === 'edit' ? 'Modifier le budget' : 'Créer un budget' ?>
+            </h2>
         </div>
+        <a href="/budgets" style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;color:#5c6c75;text-decoration:none">
+            <i class="bi bi-x-lg" style="font-size:15px"></i>
+        </a>
     </div>
+
+    <!-- Form body -->
+    <form method="post" action="<?= $e($action) ?>" novalidate>
+        <?= CSRF::getTokenField() ?>
+        <?php if ($mode === 'edit'): ?>
+        <input type="hidden" name="id" value="<?= $e((int) ($budget['id'] ?? 0)) ?>">
+        <?php endif; ?>
+        <input type="hidden" id="budget-type" name="type" value="<?= $e($selectedType) ?>">
+
+        <div style="padding:24px 28px;display:flex;flex-direction:column;gap:20px">
+
+            <?php if (!empty($flashDanger) || !empty($errors['form'])): ?>
+            <div style="display:flex;align-items:center;gap:8px;padding:12px;background:rgba(225,29,72,0.1);border:1px solid rgba(225,29,72,0.3);border-radius:8px;font-size:13px;color:#e11d48">
+                <i class="bi bi-exclamation-circle" style="flex-shrink:0"></i>
+                <?= $e($flashDanger ?: $errors['form']) ?>
+            </div>
+            <?php endif; ?>
+
+            <!-- Nom -->
+            <div>
+                <label style="display:block;font-family:'Source Code Pro',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#5c6c75;margin-bottom:8px">
+                    Nom du budget
+                </label>
+                <input
+                    type="text" name="name" id="budget-name" maxlength="100"
+                    value="<?= $e($nameValue) ?>"
+                    placeholder="Ex : Alimentation, Transport…"
+                    required
+                    style="width:100%;background:#001e2b;border:1px solid <?= !empty($errors['name']) ? '#e11d48' : '#3d4f58' ?>;border-radius:8px;padding:11px 14px;color:#e8edeb;font-size:14px;outline:none;font-family:'Plus Jakarta Sans',sans-serif;transition:border-color .2s"
+                    onfocus="this.style.borderColor='#00684a'" onblur="this.style.borderColor='<?= !empty($errors['name']) ? '#e11d48' : '#3d4f58' ?>'"
+                >
+                <?php if (!empty($errors['name'])): ?>
+                <p style="font-size:12px;color:#e11d48;margin-top:4px"><?= $e($errors['name']) ?></p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Type -->
+            <div>
+                <label style="display:block;font-family:'Source Code Pro',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#5c6c75;margin-bottom:8px">
+                    Type de budget
+                </label>
+                <div style="display:flex;gap:8px">
+                    <?php foreach ([['personal','bi-person-fill','Personnel'],['shared','bi-people-fill','Partagé']] as [$val,$icon,$lbl]): ?>
+                    <button
+                        type="button"
+                        data-budget-type="<?= $val ?>"
+                        style="flex:1;padding:10px 12px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s;
+                            background:<?= $selectedType === $val ? '#001e2b' : 'transparent' ?>;
+                            color:<?= $selectedType === $val ? '#00ed64' : '#5c6c75' ?>;
+                            border:1px solid <?= $selectedType === $val ? '#00684a' : '#3d4f58' ?>"
+                    >
+                        <i class="bi <?= $icon ?>"></i> <?= $lbl ?>
+                    </button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <!-- Période -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div>
+                    <label style="display:block;font-family:'Source Code Pro',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#5c6c75;margin-bottom:8px">
+                        Période
+                    </label>
+                    <select
+                        id="budget-period" name="period"
+                        style="width:100%;background:#001e2b;border:1px solid #3d4f58;border-radius:8px;padding:11px 14px;color:#e8edeb;font-size:14px;outline:none;cursor:pointer"
+                        onfocus="this.style.borderColor='#00684a'" onblur="this.style.borderColor='#3d4f58'"
+                    >
+                        <option value="monthly" <?= $selectedPeriod === 'monthly' ? 'selected' : '' ?> style="background:#1c2d38">Mensuel</option>
+                        <option value="weekly"  <?= $selectedPeriod === 'weekly'  ? 'selected' : '' ?> style="background:#1c2d38">Hebdomadaire</option>
+                        <option value="custom"  <?= $selectedPeriod === 'custom'  ? 'selected' : '' ?> style="background:#1c2d38">Personnalisé</option>
+                    </select>
+                </div>
+                <div id="start-date-group" style="display:<?= $selectedPeriod === 'custom' ? 'block' : 'none' ?>">
+                    <label style="display:block;font-family:'Source Code Pro',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#5c6c75;margin-bottom:8px">
+                        Date de début
+                    </label>
+                    <input
+                        type="date" id="budget-start" name="start_date"
+                        min="<?= $e($minDate) ?>" max="<?= $e($maxDate) ?>"
+                        value="<?= $e($startDateValue) ?>"
+                        style="width:100%;background:#001e2b;border:1px solid #3d4f58;border-radius:8px;padding:11px 14px;color:#e8edeb;font-size:14px;outline:none;color-scheme:dark"
+                        onfocus="this.style.borderColor='#00684a'" onblur="this.style.borderColor='#3d4f58'"
+                    >
+                </div>
+            </div>
+
+            <!-- Limite -->
+            <div>
+                <label style="display:block;font-family:'Source Code Pro',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#5c6c75;margin-bottom:8px">
+                    Limite du budget <span style="text-transform:none;letter-spacing:0;font-family:'Plus Jakarta Sans',sans-serif;color:#3d4f58">(optionnel)</span>
+                </label>
+                <div style="position:relative;display:flex;align-items:center">
+                    <span style="position:absolute;left:14px;font-size:13px;font-weight:700;color:#3d4f58;pointer-events:none;z-index:1">DT</span>
+                    <input
+                        type="number" name="amount_limit" id="budget-limit"
+                        step="1" min="0"
+                        value="<?= $e($amountLimitValue) ?>"
+                        placeholder="Pas de limite"
+                        style="width:100%;background:#001e2b;border:1px solid <?= !empty($errors['amount_limit']) ? '#e11d48' : '#3d4f58' ?>;border-radius:8px;padding:11px 14px 11px 40px;color:#e8edeb;font-size:14px;outline:none;font-family:'Plus Jakarta Sans',sans-serif;transition:border-color .2s"
+                        onfocus="this.style.borderColor='#00684a'" onblur="this.style.borderColor='<?= !empty($errors['amount_limit']) ? '#e11d48' : '#3d4f58' ?>'"
+                    >
+                </div>
+                <?php if (!empty($errors['amount_limit'])): ?>
+                <p style="font-size:12px;color:#e11d48;margin-top:4px"><?= $e($errors['amount_limit']) ?></p>
+                <?php endif; ?>
+            </div>
+
+        </div><!-- /body -->
+
+        <!-- Footer buttons -->
+        <div style="display:flex;gap:12px;padding:20px 28px;border-top:1px solid #3d4f58">
+            <a href="/budgets"
+               style="flex:1;padding:11px;border-radius:100px;border:1px solid #3d4f58;color:#b8c4c2;font-size:14px;text-align:center;text-decoration:none;font-weight:500;transition:border-color .15s;display:block"
+               onmouseover="this.style.borderColor='#5c6c75'" onmouseout="this.style.borderColor='#3d4f58'"
+            >
+                Annuler
+            </a>
+            <button
+                type="submit"
+                style="flex:1;padding:11px;border-radius:100px;background:#00684a;color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .2s,transform .15s"
+                onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'"
+            >
+                <i class="bi bi-check-lg"></i>
+                <?= $mode === 'edit' ? 'Enregistrer' : 'Créer le budget' ?>
+            </button>
+        </div>
+
+    </form>
+</div>
 </div>
 
 <script>
@@ -171,12 +170,18 @@ document.querySelectorAll('[data-budget-type]').forEach(function(btn) {
     btn.addEventListener('click', function() {
         var type = this.getAttribute('data-budget-type');
         document.getElementById('budget-type').value = type;
-        document.querySelectorAll('[data-budget-type]').forEach(function(b) { b.classList.remove('active'); });
-        this.classList.add('active');
+        document.querySelectorAll('[data-budget-type]').forEach(function(b) {
+            b.style.background = 'transparent';
+            b.style.color = '#5c6c75';
+            b.style.borderColor = '#3d4f58';
+        });
+        this.style.background = '#001e2b';
+        this.style.color = '#00ed64';
+        this.style.borderColor = '#00684a';
     });
 });
-
 document.getElementById('budget-period').addEventListener('change', function() {
-    document.getElementById('start-date-group').style.display = this.value === 'custom' ? 'block' : 'none';
+    var g = document.getElementById('start-date-group');
+    g.style.display = this.value === 'custom' ? 'block' : 'none';
 });
 </script>

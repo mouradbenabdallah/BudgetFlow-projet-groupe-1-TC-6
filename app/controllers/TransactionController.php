@@ -149,6 +149,12 @@ class TransactionController
         // Create transaction
         $this->transactions()->create($payload);
         $this->session->setFlash('success', 'La transaction a été créée avec succès.');
+
+        $budgetId = $input['budget_id'] ?? null;
+        if ($budgetId !== null && is_numeric($budgetId) && (int) $budgetId > 0) {
+            $this->redirect('/budgets/show?id=' . (int) $budgetId);
+        }
+
         $this->redirect('/transactions');
     }
 

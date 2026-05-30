@@ -10,7 +10,7 @@ $totalCategories = $totalCategories ?? count($allCategories);
 $totalExpense = $totalExpense ?? 0;
 $totalIncome = $totalIncome ?? 0;
 
-$formatMoney = static fn (mixed $amount): string => number_format((float) $amount, 3, ',', ' ') . ' TND';
+$formatMoney = static fn (mixed $amount): string => number_format((float) $amount, 2, ',', ' ') . ' TND';
 
 $categoryEmojis = [
     'alimentation' => '🍔',
@@ -81,8 +81,8 @@ $getTintedBg = static function (string $hex): string {
 
         <div class="bf-page-header">
             <div>
-                <h1 class="bf-page-title">Categories</h1>
-                <p class="bf-page-subtitle">Organize your transactions with custom categories</p>
+                <h1 class="bf-page-title">Catégories</h1>
+                <p class="bf-page-subtitle">Organisez vos transactions avec des catégories personnalisées</p>
             </div>
         </div>
 
@@ -96,14 +96,14 @@ $getTintedBg = static function (string $hex): string {
             </div>
             <div class="bf-summary-card">
                 <div class="bf-summary-header">
-                    <span class="bf-summary-label">EXPENSE CATEGORIES</span>
+                    <span class="bf-summary-label">CATÉGORIES DE DÉPENSES</span>
                     <svg class="bf-summary-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
                 </div>
                 <div class="bf-summary-value"><?= $e($totalExpense) ?></div>
             </div>
             <div class="bf-summary-card">
                 <div class="bf-summary-header">
-                    <span class="bf-summary-label">INCOME CATEGORIES</span>
+                    <span class="bf-summary-label">CATÉGORIES DE REVENUS</span>
                     <svg class="bf-summary-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
                 </div>
                 <div class="bf-summary-value"><?= $e($totalIncome) ?></div>
@@ -113,26 +113,26 @@ $getTintedBg = static function (string $hex): string {
         <div class="bf-filter-bar">
             <div class="bf-filter-group">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="categorySearch" class="bf-input" placeholder="Search categories...">
+                <input type="text" id="categorySearch" class="bf-input" placeholder="Rechercher des catégories...">
             </div>
             <div class="bf-filter-buttons">
-                <button class="bf-filter-btn is-active" data-filter="all">All</button>
-                <button class="bf-filter-btn" data-filter="expense">Expense</button>
-                <button class="bf-filter-btn" data-filter="income">Income</button>
+                <button class="bf-filter-btn is-active" data-filter="all">Tout</button>
+                <button class="bf-filter-btn" data-filter="expense">Dépenses</button>
+                <button class="bf-filter-btn" data-filter="income">Revenus</button>
             </div>
-            <button class="bf-btn bf-btn-primary" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+                <button class="bf-btn bf-btn-primary" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Add Category
+                Ajouter
             </button>
         </div>
 
         <div class="bf-categories-grid">
             <?php if (empty($allCategories)): ?>
             <div class="bf-empty-state">
-                <p class="bf-empty-state-text">No categories yet. Start by adding one!</p>
+                <p class="bf-empty-state-text">Aucune catégorie pour le moment. Commencez par en ajouter une !</p>
                 <button class="bf-btn bf-btn-primary" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Add Category
+                    Ajouter une catégorie
                 </button>
             </div>
             <?php else: ?>
@@ -148,18 +148,30 @@ $getTintedBg = static function (string $hex): string {
                 $catTotal = $category['total'] ?? 0;
                 ?>
             <div class="bf-category-card-grid" data-category-type="<?= $e($catType) ?>" data-category-name="<?= $e($catName) ?>">
-                <div class="bf-category-icon-container" style="background-color: <?= $e($tintedBg) ?>;">
+                <?php
+                $catHexBorder = ltrim($catColor, '#');
+                $catRb = hexdec(substr($catHexBorder, 0, 2));
+                $catGb = hexdec(substr($catHexBorder, 2, 2));
+                $catBb = hexdec(substr($catHexBorder, 4, 2));
+                $catBorderColor = "rgba($catRb,$catGb,$catBb,0.3)";
+                ?>
+                <div class="bf-category-icon-container" style="background:<?= $e($tintedBg) ?>;border:1px solid <?= $e($catBorderColor) ?>;">
                     <div class="bf-category-icon"><?= $emoji ?></div>
                 </div>
 
                 <div class="bf-category-info-grid">
                     <h3 class="bf-category-name"><?= $e($catName) ?></h3>
 
-                    <?php if ($catType === 'income'): ?>
-                    <span class="bf-category-type-badge" style="background: rgba(0, 237, 100, 0.1); color: #00ED64;">Income</span>
-                    <?php else: ?>
-                    <span class="bf-category-type-badge" style="background: rgba(225, 29, 72, 0.1); color: #E11D48;">Expense</span>
-                    <?php endif; ?>
+                    <?php
+                    $catTypeBadgeLabel = $catType === 'income' ? 'Revenu' : 'Dépense';
+                    // Use category color for badge background (with opacity) and text
+                    $catHex = ltrim($catColor, '#');
+                    $catR = hexdec(substr($catHex, 0, 2));
+                    $catG = hexdec(substr($catHex, 2, 2));
+                    $catB = hexdec(substr($catHex, 4, 2));
+                    $catBadgeBg = "rgba($catR,$catG,$catB,0.12)";
+                    ?>
+                    <span class="bf-category-type-badge" style="background:<?= $e($catBadgeBg) ?>;color:<?= $e($catColor) ?>"><?= $e($catTypeBadgeLabel) ?></span>
 
                     <div class="bf-category-stats-grid">
                         <div class="bf-stat-box">
@@ -183,15 +195,15 @@ $getTintedBg = static function (string $hex): string {
                         data-category-edit="<?= $e($category['id'] ?? '') ?>"
                         data-category-name="<?= $e($catName) ?>"
                         data-category-color="<?= $e($catColor) ?>"
-                        title="Edit">
+                        title="Modifier">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
-                    <form method="POST" action="/categories/delete" style="display: inline;">
+                    <form method="POST" action="/categories/delete" class="bf-form-display-inline">
                         <?= CSRF::getTokenField() ?>
                         <input type="hidden" name="id" value="<?= $e($category['id'] ?? '') ?>">
                         <button type="submit" class="bf-btn bf-btn-sm bf-btn-sm-danger"
-                            data-confirm="Delete this category?"
-                            title="Delete">
+                            data-confirm="Supprimer cette catégorie ?"
+                            title="Supprimer">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                         </button>
                     </form>
@@ -210,8 +222,8 @@ $getTintedBg = static function (string $hex): string {
         <div class="modal-content bf-modal-dark">
             <div class="modal-header">
                 <div>
-                    <small class="bf-modal-label-dark">NEW CATEGORY</small>
-                    <h5 class="modal-title" id="createModalLabel">Add Category</h5>
+                    <small class="bf-modal-label-dark">NOUVELLE CATÉGORIE</small>
+                    <h5 class="modal-title" id="createModalLabel">Ajouter une catégorie</h5>
                 </div>
                 <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -221,8 +233,8 @@ $getTintedBg = static function (string $hex): string {
 
                     <div class="bf-form-group-dark">
                         <label class="bf-label-dark">NAME</label>
-                        <input type="text" id="category-name" name="name" class="bf-input-dark"
-                            placeholder="e.g. Groceries"
+                        <input type="text" id="category-name" name="name" class="bf-input"
+                            placeholder="Ex. Courses alimentaires"
                             value="<?= $e($createState['old']['name'] ?? $createState['name'] ?? '') ?>"
                             required>
                         <?php if (isset($createState['errors']['name'])): ?>
@@ -244,10 +256,10 @@ $getTintedBg = static function (string $hex): string {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="bf-btn bf-btn-cancel-dark" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bf-btn bf-btn-submit-dark">
+                    <button type="button" class="bf-btn bf-btn-cancel-dark" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="bf-btn bf-btn-primary">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Add Category
+                        Ajouter
                     </button>
                 </div>
             </form>
@@ -261,8 +273,8 @@ $getTintedBg = static function (string $hex): string {
         <div class="modal-content bf-modal-dark">
             <div class="modal-header">
                 <div>
-                    <small class="bf-modal-label-dark">EDIT CATEGORY</small>
-                    <h5 class="modal-title" id="editModalLabel">Edit Category</h5>
+                    <small class="bf-modal-label-dark">MODIFIER LA CATÉGORIE</small>
+                    <h5 class="modal-title" id="editModalLabel">Modifier la catégorie</h5>
                 </div>
                 <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -274,8 +286,8 @@ $getTintedBg = static function (string $hex): string {
 
                     <div class="bf-form-group-dark">
                         <label class="bf-label-dark">NAME</label>
-                        <input type="text" id="edit-category-name" name="name" class="bf-input-dark"
-                            placeholder="e.g. Groceries" required>
+                        <input type="text" id="edit-category-name" name="name" class="bf-input"
+                            placeholder="Ex. Courses alimentaires" required>
                     </div>
 
                     <div class="bf-form-group-dark">
@@ -291,10 +303,10 @@ $getTintedBg = static function (string $hex): string {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="bf-btn bf-btn-cancel-dark" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bf-btn bf-btn-submit-dark">
+                    <button type="button" class="bf-btn bf-btn-cancel-dark" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="bf-btn bf-btn-primary">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Save Changes
+                        Enregistrer
                     </button>
                 </div>
             </form>

@@ -31,6 +31,47 @@ class BudgetController
     }
 
     /**
+     * Display the shared budgets listing page.
+     * 
+     * Shows only shared budgets with the collaboration layout.
+     */
+    public function sharedIndex(): void
+    {
+        Auth::requireRole('user');
+
+        $user = Auth::getUser() ?? [];
+        $userId = (int) ($user['id'] ?? 0);
+
+        $allBudgets = $this->budgets()->findByUser($userId);
+        $sharedBudgets = [];
+
+        foreach ($allBudgets as $budget) {
+            if (($budget['type'] ?? '') === 'shared') {
+                $budget['members'] = $this->budgets()->getMembers((int) ($budget['id'] ?? 0));
+                $sharedBudgets[] = $budget;
+            }
+        }
+
+        // Redirect to the first shared budget detail (Figma unified split-view)
+        if (!empty($sharedBudgets)) {
+            $firstId = (int) ($sharedBudgets[0]['id'] ?? 0);
+            if ($firstId > 0) {
+                $this->redirect('/budgets/show?id=' . $firstId);
+            }
+        }
+
+        $this->renderSharedBudget('budgets/shared_index', [
+            'title' => 'Budgets partagés',
+            'pageTitle' => 'Budgets partagés',
+            'user' => $user,
+            'sharedBudgets' => $sharedBudgets,
+            'flashSuccess' => $this->session->getFlash('success'),
+            'flashWarning' => $this->session->getFlash('warning'),
+            'flashDanger' => $this->session->getFlash('danger'),
+        ]);
+    }
+
+    /**
      * Display the budgets listing page.
      * 
      * Shows personal budgets (owned by user) and shared budgets (where user is member).
@@ -191,17 +232,34 @@ class BudgetController
         $categoryBreakdown = $this->budgets()->getCategoryBreakdown($budgetId);
 
         $members = [];
-        if (($budget['type'] ?? '') === 'shared') {
-            $members = $this->budgets()->getMembers($budgetId);
+        $memberContributions = [];
+        $categories = [];
+
+        $allBudgets = $this->budgets()->findByUser($userId);
+        $sharedBudgets = [];
+        foreach ($allBudgets as $b) {
+            if (($b['type'] ?? '') === 'shared') {
+                $b['members'] = $this->budgets()->getMembers((int) ($b['id'] ?? 0));
+                $sharedBudgets[] = $b;
+            }
         }
 
-        $this->render('budgets/show', [
+        if (($budget['type'] ?? '') === 'shared') {
+            $members = $this->budgets()->getMembers($budgetId);
+            $memberContributions = $this->budgets()->getMemberContributions($budgetId);
+            $categories = $this->budgets()->getCategoriesForBudget($userId);
+        }
+
+        $this->renderSharedBudget('budgets/show', [
             'title' => htmlspecialchars((string) ($budget['name'] ?? 'Budget')),
             'pageTitle' => htmlspecialchars((string) ($budget['name'] ?? 'Budget')),
             'user' => $user,
             'budget' => $budget,
             'isOwner' => $isOwner,
             'members' => $members,
+            'memberContributions' => $memberContributions,
+            'categories' => $categories,
+            'sharedBudgets' => $sharedBudgets,
             'transactions' => $transactions,
             'categoryBreakdown' => $categoryBreakdown,
             'percent' => $percent,
@@ -616,6 +674,23 @@ class BudgetController
         }
 
         return $sanitized;
+    }
+
+    /**
+     * Render a view within the shared budget layout (no sidebar/topbar).
+     *
+     * @param string $view View file path (relative to app/views/)
+     * @param array<string, mixed> $data Variables to extract into the view
+     */
+    private function renderSharedBudget(string $view, array $data = []): void
+    {
+        extract($data, EXTR_SKIP);
+
+        ob_start();
+        require __DIR__ . '/../views/' . $view . '.php';
+        $content = ob_get_clean();
+
+        require __DIR__ . '/../views/layouts/shared_budget.php';
     }
 
     /**

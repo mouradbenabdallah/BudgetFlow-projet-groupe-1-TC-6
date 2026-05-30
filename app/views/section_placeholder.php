@@ -18,7 +18,7 @@ $sectionMessage = $sectionMessage ?? 'Cette section est en cours de développeme
         <header class="bf-topbar">
             <h1 class="h5 mb-0"><?= htmlspecialchars($sectionTitle, ENT_QUOTES, 'UTF-8') ?></h1>
             <div class="d-flex align-items-center gap-2">
-                <form method="post" action="/logout" style="margin:0;">
+                <form method="post" action="/logout" class="bf-form-inline">
                     <?= CSRF::getTokenField() ?>
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-box-arrow-right"></i> D&eacute;connexion

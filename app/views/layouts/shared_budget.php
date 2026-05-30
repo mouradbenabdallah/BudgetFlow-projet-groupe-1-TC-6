@@ -1,24 +1,15 @@
 <?php
-// Layout principal pour toutes les pages accessibles après connexion.
 $layoutUser = $user ?? Auth::getUser() ?? [];
-$pageTitleText = (string) ($pageTitle ?? $title ?? 'BudgetFlow');
+$pageTitleText = (string) ($pageTitle ?? $title ?? 'Budgets partagés');
 $documentTitle = htmlspecialchars($pageTitleText . ' - BudgetFlow', ENT_QUOTES, 'UTF-8');
 $safePageTitle = htmlspecialchars($pageTitleText, ENT_QUOTES, 'UTF-8');
 $nameParts = preg_split('/\s+/', trim((string) ($layoutUser['name'] ?? 'Utilisateur'))) ?: [];
 $displayName = $nameParts[0] ?? 'Utilisateur';
-$safeUserName = htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8');
 $initials = '';
-
 foreach (array_slice($nameParts, 0, 2) as $part) {
-    if ($part === '') {
-        continue;
-    }
-
-    $initials .= function_exists('mb_substr')
-        ? mb_substr($part, 0, 1, 'UTF-8')
-        : substr($part, 0, 1);
+    if ($part === '') continue;
+    $initials .= function_exists('mb_substr') ? mb_substr($part, 0, 1, 'UTF-8') : substr($part, 0, 1);
 }
-
 $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'), ENT_QUOTES, 'UTF-8');
 ?>
 <!doctype html>
@@ -35,8 +26,6 @@ $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'),
     <link href="/style.css?v=7" rel="stylesheet">
     <link rel="icon" href="/img/favicon-budget.png" type="image/png">
     <link rel="icon" href="/img/favicon-budget.ico" type="image/x-icon">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
-    <script src="/script.js"></script>
 </head>
 <body class="bf-page-app">
     <div class="bf-app-shell">
@@ -46,37 +35,19 @@ $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'),
             <header class="bf-topbar">
                 <div>
                     <h1 class="bf-page-title"><?= $safePageTitle ?></h1>
-                    <?php
-                    $subtitleMap = [
-                        'Tableau de bord' => 'Bon retour, ' . $safeUserName . ' 👋',
-                        'Transactions'    => 'Suivez et gérez votre activité financière',
-                        'Mes Budgets'     => 'Définissez des limites et suivez vos dépenses',
-                        'Catégories'      => 'Organisez vos transactions avec des catégories personnalisées',
-                        'Nouveau budget'  => 'Créez un nouveau budget pour suivre vos dépenses',
-                        'Modifier le budget' => 'Modifiez les paramètres de votre budget',
-                        'Profil'          => 'Gérez vos informations personnelles',
-                        'Paramètres'      => 'Configurez votre compte BudgetFlow',
-                        'Notifications'   => 'Vos alertes et notifications',
-                    ];
-                    $topbarSubtitle = $subtitleMap[$pageTitleText] ?? ('Bon retour, ' . $safeUserName . ' 👋');
-                    ?>
-                    <p class="bf-page-subtitle"><?= htmlspecialchars($topbarSubtitle, ENT_QUOTES, 'UTF-8') ?></p>
+                    <p class="bf-page-subtitle">Collaborez sur les dépenses de groupe et finances partagées</p>
                 </div>
-
                 <div class="bf-topbar-actions">
                     <form class="bf-search" role="search">
                         <i class="bi bi-search" aria-hidden="true"></i>
-                        <label class="visually-hidden" for="bf-search-input">Rechercher</label>
-                        <input id="bf-search-input" type="search" name="q" placeholder="Search..." autocomplete="off">
+                        <label class="visually-hidden" for="bf-search-shared">Rechercher</label>
+                        <input id="bf-search-shared" type="search" name="q" placeholder="Search..." autocomplete="off">
                     </form>
-
                     <button class="bf-icon-button" type="button" aria-label="Notifications">
                         <i class="bi bi-bell" aria-hidden="true"></i>
                         <span class="bf-notification-dot" aria-hidden="true"></span>
                     </button>
-
                     <span class="bf-top-avatar" aria-label="Utilisateur connecté"><?= $safeInitials ?></span>
-
                     <form method="post" action="/logout" class="bf-form-inline">
                         <?= CSRF::getTokenField() ?>
                         <button type="submit" class="bf-btn bf-btn-logout" aria-label="Déconnexion">
@@ -86,7 +57,7 @@ $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'),
                 </div>
             </header>
 
-            <div class="bf-content">
+            <div class="bf-content bf-content-no-padding">
                 <?= $content ?? '' ?>
             </div>
         </main>

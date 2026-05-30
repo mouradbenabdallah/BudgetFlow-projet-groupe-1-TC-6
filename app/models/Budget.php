@@ -403,4 +403,50 @@ class Budget
 
         return $statement->fetchAll();
     }
+
+    /**
+     * Get contribution amounts per member for a shared budget.
+     *
+     * @param int $budgetId The budget ID
+     * @return array<array<string, mixed>> List of members with their total contributions
+     */
+    public function getMemberContributions(int $budgetId): array
+    {
+        $statement = $this->pdo->prepare(
+            "SELECT u.id, u.name, u.email,
+                    COALESCE(SUM(t.amount), 0) AS contributed
+             FROM budget_members bm
+             JOIN users u ON u.id = bm.user_id
+             LEFT JOIN transactions t ON t.user_id = u.id
+                                       AND t.budget_id = :budget_id
+                                       AND t.type = 'expense'
+             WHERE bm.budget_id = :budget_id
+             GROUP BY u.id, u.name, u.email
+             ORDER BY contributed DESC"
+        );
+        $statement->bindValue(':budget_id', $budgetId, PDO::PARAM_INT);
+        $statement->execute();
+
+        return $statement->fetchAll();
+    }
+
+    /**
+     * Get all categories available for a budget's transactions.
+     *
+     * @param int $userId The user ID (to get user's categories + defaults)
+     * @return array<array<string, mixed>> List of categories
+     */
+    public function getCategoriesForBudget(int $userId): array
+    {
+        $statement = $this->pdo->prepare(
+            "SELECT id, name, color
+             FROM categories
+             WHERE user_id = :user_id OR is_default = true
+             ORDER BY name ASC"
+        );
+        $statement->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $statement->execute();
+
+        return $statement->fetchAll();
+    }
 }

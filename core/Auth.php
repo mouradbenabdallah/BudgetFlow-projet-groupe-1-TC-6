@@ -51,7 +51,6 @@ class Auth
 
     /**
      * Require the user to have a specific role.
-     * Admins are granted implicit access to user-level routes.
      *
      * @param string $role Required role ('user' or 'admin')
      */
@@ -67,10 +66,6 @@ class Auth
         $userRole = $user['role'] ?? 'user';
 
         if ($userRole === $role) {
-            return;
-        }
-
-        if ($role === 'user' && $userRole === 'admin') {
             return;
         }
 

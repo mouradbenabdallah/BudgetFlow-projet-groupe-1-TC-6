@@ -10,7 +10,7 @@ $selectedType = (string) ($selectedType ?? ($transaction['type'] ?? 'expense'));
 $selectedBudgetId = (int) ($transaction['budget_id'] ?? 0);
 $selectedCategoryId = (int) ($transaction['category_id'] ?? 0);
 $dateValue = (string) ($transaction['date'] ?? date('Y-m-d'));
-$amountValue = isset($transaction['amount']) ? number_format((float) $transaction['amount'], 3, '.', '') : '';
+$amountValue = isset($transaction['amount']) ? number_format((float) $transaction['amount'], 2, '.', '') : '';
 $descriptionValue = (string) ($transaction['description'] ?? '');
 $minDate = '2000-01-01';
 $maxDate = date('Y-m-d', strtotime('+1 year'));
@@ -97,7 +97,7 @@ $maxDate = date('Y-m-d', strtotime('+1 year'));
                         <?php endforeach; ?>
                     </select>
                     <div class="mt-2">
-                        <span class="bf-category-preview" id="category-preview" style="display:none;">
+                        <span class="bf-category-preview bf-display-none" id="category-preview">
                             <span class="bf-category-preview-dot" id="category-preview-dot"></span>
                             <span id="category-preview-label">Sans catégorie</span>
                         </span>

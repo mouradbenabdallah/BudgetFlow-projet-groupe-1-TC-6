@@ -11,7 +11,7 @@
 ╚═════╝  ╚═════╝ ╚═════╝  ╚═════╝ ╚══════╝   ╚═╝   ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚══╝
 ```
 
-### 💰 Application Web de Gestion Collaborative de Budget Personnel
+### Application Web de Gestion Collaborative de Budget Personnel
 
 <br/>
 
@@ -27,6 +27,7 @@
 [![ITEAM University](https://img.shields.io/badge/ITEAM_University-Projet_Semestriel-6C63FF?style=for-the-badge)](https://iteam-u.tn)
 [![Groupe](https://img.shields.io/badge/Groupe_1-TC--6-22D3A5?style=for-the-badge)]()
 [![Année](https://img.shields.io/badge/Année-2025--2026-FFB547?style=for-the-badge)]()
+[![Status](https://img.shields.io/badge/Status-Terminé-22D3A5?style=for-the-badge)]()
 
 <br/>
 
@@ -40,36 +41,39 @@
 
 ## 📋 Table des matières
 
-- [🎯 Présentation du projet](#-présentation-du-projet)
+- [🎯 Présentation](#-présentation)
 - [✨ Fonctionnalités](#-fonctionnalités)
 - [🤖 Assistant IA](#-assistant-ia)
+- [📄 Rapport PDF](#-rapport-pdf)
 - [🏗️ Architecture](#️-architecture)
 - [🗄️ Base de données](#️-base-de-données)
 - [🚀 Lancement rapide](#-lancement-rapide)
-- [📸 Captures d'écran](#-captures-décran)
 - [🔐 Sécurité](#-sécurité)
-- [📧 Système d'emails](#-système-demails)
+- [📧 Emails automatiques](#-emails-automatiques)
+- [🛠️ Stack technique](#️-stack-technique)
 - [👥 Équipe](#-équipe)
 
 ---
 
-## 🎯 Présentation du projet
+## 🎯 Présentation
 
-**BudgetFlow** est une application web développée dans le cadre du **Projet Semestriel de 1ère année ING** à ITEAM University. Elle permet à des individus ou des groupes de gérer leurs finances personnelles de manière simple, sécurisée et collaborative.
+**BudgetFlow** est une application web développée dans le cadre du **Projet Semestriel de 1ère année ING** à ITEAM University. Elle permet à des individus ou des groupes de suivre leurs finances personnelles de manière simple, sécurisée et collaborative — avec un assistant IA intégré et une génération de rapports PDF.
 
-### 🔍 Problème résolu
+### Problème résolu
 
-| ❌ Problème                      | ✅ Solution BudgetFlow                        |
-| -------------------------------- | --------------------------------------------- |
-| Outils financiers trop complexes | Interface simple et intuitive                 |
-| Pas de gestion collaborative     | Budgets partagés multi-utilisateurs           |
-| Aucune alerte de dépassement     | Notifications visuelles + emails automatiques |
-| Données dispersées               | Tableau de bord centralisé avec graphiques    |
+| ❌ Problème | ✅ Solution BudgetFlow |
+|-------------|------------------------|
+| Outils financiers trop complexes | Interface dark mode élégante et intuitive |
+| Pas de gestion collaborative | Budgets partagés multi-utilisateurs avec invitations |
+| Aucune alerte de dépassement | Alertes visuelles + emails automatiques à 80% et 100% |
+| Données dispersées | Tableau de bord centralisé avec graphiques Chart.js |
+| Pas de vue d'ensemble | Rapport PDF complet — mensuel ou annuel |
+| Pas de conseils personnalisés | Assistant IA financier (LLM local, données privées) |
 
-### 🎓 Contexte académique
+### Contexte académique
 
 ```
-Établissement  : ITEAM University
+Établissement  : ITEAM University — Tunis, Tunisie
 Formation      : 1ère année Ingénierie (cours aménagés)
 Module         : Projet Semestriel
 Méthodologie   : Modèle en cascade
@@ -81,77 +85,76 @@ Année          : 2025 – 2026
 ## ✨ Fonctionnalités
 
 <details>
-<summary><b>👤 Gestion des utilisateurs</b> — cliquez pour développer</summary>
-
+<summary><b>👤 Gestion des utilisateurs</b></summary>
 <br/>
 
-- ✅ Inscription avec validation par l'administrateur
+- ✅ Inscription avec validation manuelle par l'administrateur
 - ✅ Connexion sécurisée avec sessions PHP
-- ✅ Gestion des rôles : `user` et `admin`
-- ✅ Modification du profil et mot de passe
-- ✅ Demande de suppression de compte
+- ✅ Deux rôles distincts : `user` et `admin`
+- ✅ Modification du profil, email, téléphone et mot de passe
+- ✅ Demande de suppression de compte avec workflow admin
+- ✅ Dark mode persistant (localStorage)
 
 </details>
 
 <details>
-<summary><b>💳 Gestion des transactions</b> — cliquez pour développer</summary>
-
+<summary><b>💳 Transactions</b></summary>
 <br/>
 
 - ✅ Ajouter des revenus et des dépenses
-- ✅ Affecter une transaction à une catégorie
+- ✅ Affecter une transaction à une catégorie colorée
 - ✅ Modifier et supprimer ses transactions
-- ✅ Filtrage par période, catégorie et budget
+- ✅ Historique complet avec filtres période / catégorie / budget
+- ✅ Montants en Dinar Tunisien (DT)
 
 </details>
 
 <details>
-<summary><b>📊 Budgets</b> — cliquez pour développer</summary>
-
+<summary><b>📊 Budgets</b></summary>
 <br/>
 
-- ✅ Créer des budgets individuels ou partagés
+- ✅ Budgets personnels ou partagés
 - ✅ Périodes : hebdomadaire, mensuel, personnalisé
-- ✅ Plafond global et plafonds par catégorie
-- ✅ Suivi de consommation en temps réel
+- ✅ Plafond de dépenses configurable (ou sans limite)
+- ✅ Barre de progression en temps réel
+- ✅ Alerte visuelle à 80% et dépassement en rouge
 
 </details>
 
 <details>
-<summary><b>🤝 Collaboration</b> — cliquez pour développer</summary>
-
+<summary><b>🤝 Collaboration</b></summary>
 <br/>
 
-- ✅ Inviter des membres sur un budget partagé
-- ✅ Identification de l'auteur de chaque transaction
+- ✅ Inviter des membres par email sur un budget partagé
+- ✅ Chaque transaction identifie son auteur
 - ✅ Vision commune des dépenses du groupe
-- ✅ Invitation par email automatique
+- ✅ Retrait de membres par le propriétaire
 
 </details>
 
 <details>
-<summary><b>🔔 Alertes et tableau de bord</b> — cliquez pour développer</summary>
-
+<summary><b>📈 Tableau de bord</b></summary>
 <br/>
 
-- ✅ Alerte visuelle à 80% du budget
-- ✅ Alerte email en cas de dépassement
-- ✅ Graphique camembert par catégorie (Chart.js)
-- ✅ Courbe d'évolution temporelle
-- ✅ Solde, revenus, dépenses en temps réel
+- ✅ Solde, revenus et dépenses du mois en temps réel
+- ✅ Graphique camembert des dépenses par catégorie (Chart.js)
+- ✅ Courbe d'évolution temporelle des dépenses
+- ✅ Top transactions récentes
+- ✅ Résumé des budgets actifs
 
 </details>
 
 <details>
-<summary><b>🛡️ Panneau d'administration</b> — cliquez pour développer</summary>
-
+<summary><b>🛡️ Panneau d'administration</b></summary>
 <br/>
 
-- ✅ Validation des comptes en attente
-- ✅ Gestion des rôles utilisateurs
+- ✅ Validation des comptes utilisateurs en attente
+- ✅ Gestion des rôles (promouvoir / rétrograder)
+- ✅ Réinitialisation de mot de passe
+- ✅ Export CSV des utilisateurs
 - ✅ Supervision des budgets partagés
 - ✅ Statistiques globales de la plateforme
-- ✅ Traitement des demandes de suppression
+- ✅ Envoi d'emails groupés à tous les utilisateurs
 
 </details>
 
@@ -159,171 +162,221 @@ Année          : 2025 – 2026
 
 ## 🤖 Assistant IA
 
-BudgetFlow intègre un **assistant financier conversationnel** alimenté par un modèle LLM local via **Ollama** — aucune donnée ne quitte le serveur.
+BudgetFlow intègre un **assistant financier conversationnel** alimenté par **Ollama** (LLM local) — aucune donnée ne quitte le serveur.
 
-<details>
-<summary><b>Voir les détails de l'intégration IA</b></summary>
+```
+Utilisateur ──POST /api/chat──▶ AiController ──cURL──▶ Ollama (Docker)
+                                     │                  llama3.2:1b
+                                     │ contexte financier injecté
+                                     ▼
+                              Solde · Dépenses · Budgets de l'utilisateur
+```
 
-<br/>
+**Caractéristiques :**
 
-- Bouton flottant animé sur toutes les pages utilisateur (absent sur admin)
-- Modal Bootstrap dark avec interface de chat
-- L'IA connaît le solde, les dépenses et les budgets de l'utilisateur
-- Historique de conversation conservé côté client uniquement
-- Modèle : `llama3.2:1b` — tourne entièrement dans Docker (CPU)
+- Bouton flottant animé (design wavy vert) sur toutes les pages utilisateur
+- Modal Bootstrap dark avec interface de chat complète
+- L'IA connaît le solde, les dépenses et les budgets en temps réel
+- Historique conservé côté client uniquement — zéro écriture en base
+- Modèle `llama3.2:1b` — tourne entièrement dans Docker (CPU)
 
 **Démarrage :**
 
 ```bash
-# Démarrer Ollama
-docker compose up -d ollama
-
-# Télécharger le modèle (une seule fois, ~1.3 GB)
+# Télécharger le modèle (une seule fois — ~1.3 Go)
 docker exec budgetflow_ollama ollama pull llama3.2:1b
 
-# Trouver Ollama dans Docker
-docker ps | grep ollama
-docker logs budgetflow_ollama
+# Vérifier
 docker exec budgetflow_ollama ollama list
 
-# Tester l'API directement
+# Tester l'API
 curl http://localhost:11434/api/tags
 ```
 
-Documentation complète : [`documentation/ai.md`](documentation/ai.md)
+> Documentation complète → [`documentation/ai.md`](documentation/ai.md)
 
-</details>
+---
+
+## 📄 Rapport PDF
+
+Génère un rapport financier complet directement dans le navigateur — **sans librairie externe**, en PHP pur.
+
+**Contenu du rapport :**
+
+| Section | Détail |
+|---------|--------|
+| 📊 Statistiques | Revenus, dépenses, solde net, nombre de transactions |
+| 💳 Transactions | Tableau détaillé avec date, catégorie, budget, montant |
+| 💰 Budgets | Barre de progression, statut (OK / Proche / Dépassé) |
+| 🏷️ Catégories | Répartition en barres avec pourcentages |
+
+**Fonctionnement :**
+
+```
+GET  /rapport          → Formulaire (type : mensuel / annuel, sections à inclure)
+POST /rapport/generer  → Page HTML optimisée impression → window.print() → PDF
+```
+
+> Bouton de génération avec design **wavy vert animé** + `pdf.gif` intégré.
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                        Navigateur Client                          │
-│                     HTML + Bootstrap 5 + JS                       │
-└───────────────────────────┬──────────────────────────────────────┘
-                            │ HTTP
-┌───────────────────────────▼──────────────────────────────────────┐
-│                       Docker Network                              │
-│  ┌──────────┐   ┌──────────────┐   ┌─────────────┐  ┌────────┐  │
-│  │  Nginx   │──▶│  PHP 8.3 FPM│──▶│ PostgreSQL  │  │ Ollama │  │
-│  │  :8000   │   │  MVC natif  │   │  16 Alpine  │  │  :11434│  │
-│  └──────────┘   └──────┬───────┘   └─────────────┘  └────┬───┘  │
-│                         └──────────────────────────────────┘      │
-│                              ollama:11434 (AI chat)                │
-└──────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│                         Navigateur Client                           │
+│               HTML5 + Bootstrap 5.3 + Chart.js + JS                │
+└───────────────────────────┬────────────────────────────────────────┘
+                            │ HTTP :8000
+┌───────────────────────────▼────────────────────────────────────────┐
+│                        Docker Network : budgetflow                  │
+│                                                                     │
+│  ┌─────────────┐    ┌──────────────────┐    ┌──────────────────┐   │
+│  │    Nginx    │───▶│   PHP 8.3-FPM    │───▶│  PostgreSQL 16   │   │
+│  │  :8000→80   │    │   MVC natif      │    │  Alpine  :5432   │   │
+│  └─────────────┘    └────────┬─────────┘    └──────────────────┘   │
+│                              │ cURL                                  │
+│                     ┌────────▼─────────┐                            │
+│                     │     Ollama       │                            │
+│                     │  llama3.2:1b     │                            │
+│                     │   :11434         │                            │
+│                     └──────────────────┘                            │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
-### 📁 Structure du projet
+### Structure du projet
 
 ```
 budgetflow/
-├── 📂 public/
-│   └── index.php              ← Point d'entrée unique (router)
-├── 📂 app/
-│   ├── 📂 controllers/        ← Logique métier
-│   ├── 📂 models/             ← Accès données (PDO)
-│   └── 📂 views/              ← Templates HTML/PHP
-│       ├── 📂 layouts/        ← Layout principal + guest
-│       ├── 📂 auth/           ← Login, Register
-│       ├── 📂 dashboard/      ← Tableau de bord
-│       ├── 📂 budgets/        ← Gestion budgets
-│       ├── 📂 transactions/   ← Gestion transactions
-│       ├── 📂 categories/     ← Gestion catégories
-│       └── 📂 admin/          ← Panneau admin
-├── 📂 core/
-│   ├── Database.php           ← Singleton PDO PostgreSQL
-│   ├── Router.php             ← Routing GET/POST
-│   ├── Session.php            ← Sessions + flash messages
-│   ├── Auth.php               ← Vérification des rôles
-│   ├── CSRF.php               ← Protection CSRF
-│   └── Mailer.php             ← PHPMailer wrapper
-├── 📂 config/
-│   └── config.php             ← Configuration centrale
-├── 📂 database/
-│   └── schema.sql             ← Schéma PostgreSQL complet
-└── 📂 docker/
-    ├── php.Dockerfile         ← Image PHP 8.3-FPM Alpine
-    └── nginx.conf             ← Configuration Nginx
+├── public/
+│   ├── index.php              ← Point d'entrée UNIQUE (router + require_once)
+│   ├── style.css              ← Classes bf-* custom
+│   ├── script.js              ← Dark mode, sidebar
+│   └── animations/            ← ai-chat.gif · pdf.gif
+│
+├── app/
+│   ├── controllers/
+│   │   ├── AuthController.php
+│   │   ├── DashboardController.php
+│   │   ├── TransactionController.php
+│   │   ├── CategoryController.php
+│   │   ├── BudgetController.php
+│   │   ├── ProfileController.php
+│   │   ├── AdminController.php
+│   │   ├── AiController.php          ← POST /api/chat → Ollama
+│   │   └── RapportController.php     ← GET /rapport · POST /rapport/generer
+│   ├── models/
+│   │   ├── User.php · Budget.php · Transaction.php · Category.php
+│   └── views/
+│       ├── layouts/  app.php · admin.php · guest.php
+│       ├── partials/ sidebar.php · ai-assistant.php
+│       ├── rapport/  index.php · print.php
+│       └── emails/   *.php (templates emails)
+│
+├── core/
+│   ├── Database.php   ← Singleton PDO PostgreSQL
+│   ├── Router.php     ← Routing GET/POST
+│   ├── Session.php    ← Sessions + flash messages (instance)
+│   ├── Auth.php       ← Contrôle des rôles (statique)
+│   ├── CSRF.php       ← Protection CSRF (statique)
+│   └── Mailer.php     ← PHPMailer wrapper
+│
+├── config/config.php          ← Configuration centrale
+├── database/schema.sql        ← Schéma + données initiales
+├── docker/  php.Dockerfile · nginx.conf · ollama-init.sh
+└── documentation/
+    ├── SKILL.md   ← Référence technique complète
+    ├── design.md  ← Design system BudgetFlow
+    ├── ai.md      ← Intégration Ollama
+    ├── docker.md  ← Guide Docker détaillé
+    └── work.md    ← Guide de lancement
 ```
 
-### 🔄 Routing
+### Routes complètes
 
-| Méthode | Route                  | Description            | Rôle requis      |
-| ------- | ---------------------- | ---------------------- | ---------------- |
-| `GET`   | `/login`               | Page de connexion      | —                |
-| `POST`  | `/login`               | Traitement connexion   | —                |
-| `GET`   | `/register`            | Page d'inscription     | —                |
-| `POST`  | `/register`            | Traitement inscription | —                |
-| `GET`   | `/dashboard`           | Tableau de bord        | `user`           |
-| `GET`   | `/budgets`             | Liste des budgets      | `user`           |
-| `POST`  | `/budgets/create`      | Créer un budget        | `user`           |
-| `GET`   | `/transactions`        | Liste transactions     | `user`           |
-| `POST`  | `/transactions/create` | Créer une transaction  | `user`           |
-| `GET`   | `/categories`          | Gestion catégories     | `user`           |
-| `GET`   | `/profile`             | Profil utilisateur     | `user`           |
-| `GET`   | `/admin`               | Panneau admin          | `admin`          |
-| `GET`   | `/logout`              | Déconnexion            | `user` / `admin` |
+<details>
+<summary>Voir toutes les routes</summary>
+<br/>
+
+**Authentification**
+
+| Méthode | Route | Contrôleur |
+|---------|-------|-----------|
+| `GET` | `/login` | `AuthController::showLogin` |
+| `POST` | `/login` | `AuthController::login` |
+| `GET` | `/register` | `AuthController::showRegister` |
+| `POST` | `/register` | `AuthController::register` |
+| `POST` | `/logout` | `AuthController::logout` |
+
+**Utilisateur** `[role: user]`
+
+| Méthode | Route | Contrôleur |
+|---------|-------|-----------|
+| `GET` | `/dashboard` | `DashboardController::index` |
+| `GET/POST` | `/transactions` | `TransactionController` |
+| `GET/POST` | `/budgets` + `/budgets/shared` | `BudgetController` |
+| `GET/POST` | `/categories` | `CategoryController` |
+| `GET/POST` | `/profile` | `ProfileController` |
+| `GET` | `/rapport` | `RapportController::index` |
+| `POST` | `/rapport/generer` | `RapportController::generer` |
+| `POST` | `/api/chat` | `AiController::chat` |
+
+**Administration** `[role: admin]`
+
+| Méthode | Route | Contrôleur |
+|---------|-------|-----------|
+| `GET` | `/admin` | `AdminController::index` |
+| `GET` | `/admin/users` | `AdminController::users` |
+| `GET` | `/admin/users/export` | `AdminController::exportUsers` |
+| `POST` | `/admin/users/validate` | `AdminController::validateUser` |
+| `POST` | `/admin/users/role` | `AdminController::changeRole` |
+| `POST` | `/admin/users/delete` | `AdminController::deleteUser` |
+| `POST` | `/admin/users/reset-password` | `AdminController::resetPassword` |
+| `GET` | `/admin/budgets` | `AdminController::budgets` |
+| `GET/POST` | `/admin/send-email` | `AdminController::sendBulkEmail` |
+
+</details>
 
 ---
 
 ## 🗄️ Base de données
 
-**PostgreSQL 16** — Schéma minimaliste et propre : **5 tables uniquement**
+**PostgreSQL 16** — 5 tables uniquement.
 
-```sql
-┌──────────────────┐       ┌──────────────────┐
-│      users       │       │    categories    │
-├──────────────────┤       ├──────────────────┤
-│ id (PK)          │       │ id (PK)          │
-│ name             │       │ user_id (FK)     │◄── NULL = défaut
-│ email (UNIQUE)   │       │ name             │
-│ password (bcrypt)│       │ color            │
-│ role             │       │ is_default       │
-│ is_active        │       └──────────────────┘
-│ created_at       │
-└────────┬─────────┘
-         │ 1
-         │ ∞
-┌────────▼─────────┐       ┌──────────────────┐
-│     budgets      │       │  budget_members  │
-├──────────────────┤       ├──────────────────┤
-│ id (PK)          │       │ id (PK)          │
-│ owner_id (FK)    │◄──────│ budget_id (FK)   │
-│ name             │       │ user_id (FK)     │
-│ type             │       │ UNIQUE(b_id,u_id)│
-│ period           │       └──────────────────┘
-│ amount_limit     │
-│ start_date       │
-└────────┬─────────┘
-         │ 1
-         │ ∞
-┌────────▼─────────┐
-│   transactions   │
-├──────────────────┤
-│ id (PK)          │
-│ budget_id (FK)   │
-│ user_id (FK)     │
-│ category_id (FK) │
-│ type             │
-│ amount           │
-│ description      │
-│ date             │
-└──────────────────┘
+```
+users ──────────────────────────────────────────────────────────┐
+  id · name · email · password (bcrypt) · role · is_active       │
+  phone · preferences (JSONB) · last_login_at · created_at       │
+                                                                  │
+categories ─────────────────────────────────────────┐           │
+  id · user_id (FK→users) · name · color · is_default│           │
+                                                      │           │
+budgets ──────────────────────────────────────────┐  │           │
+  id · owner_id (FK→users) · name · type · period │  │           │
+  amount_limit · start_date · created_at           │  │           │
+       │                                           │  │           │
+       │  budget_members ──────────────────────────┘  │           │
+       │    id · budget_id (FK) · user_id (FK)        │           │
+       │    UNIQUE(budget_id, user_id)                 │           │
+       │                                               │           │
+transactions ──────────────────────────────────────┘  │           │
+  id · budget_id (FK) · user_id (FK→users)             │           │
+  category_id (FK→categories) ─────────────────────────┘           │
+  type (income/expense) · amount · description · date ──────────────┘
 ```
 
-### 🏷️ Catégories par défaut
+### Catégories par défaut
 
-| Catégorie       | Couleur   |
-| --------------- | --------- |
-| 🛒 Alimentation | `#22D3A5` |
-| 🚗 Transport    | `#60A5FA` |
-| 🏠 Logement     | `#F472B6` |
-| ❤️ Santé        | `#FF6B6B` |
-| 🎮 Loisirs      | `#FFB547` |
-| 📚 Études       | `#A78BFA` |
-| 📦 Autre        | `#8B90A7` |
+| Icône | Catégorie | Couleur |
+|-------|-----------|---------|
+| 🛒 | Alimentation | `#22D3A5` |
+| 🚗 | Transport | `#60A5FA` |
+| 🏠 | Logement | `#F472B6` |
+| ❤️ | Santé | `#FF6B6B` |
+| 🎮 | Loisirs | `#FFB547` |
+| 📚 | Études | `#A78BFA` |
+| 📦 | Autre | `#8B90A7` |
 
 ---
 
@@ -333,134 +386,118 @@ budgetflow/
 
 ```
 ✅ Git
-✅ Docker Desktop (Windows/Mac) ou Docker Engine (Linux)
+✅ Docker Engine ou Docker Desktop
 ```
 
-### Installation en 3 commandes
+### Installation
 
 ```bash
 # 1. Cloner le projet
 git clone https://github.com/mouradbenabdallah/budgetflow.git
 cd budgetflow
 
-# 2. Lancer Docker
+# 2. Démarrer les 4 services
 docker compose up -d --build
 
-# 3. Ouvrir dans le navigateur
-# http://localhost:8000
+# 3. Télécharger le modèle IA (une seule fois — ~1.3 Go)
+docker exec budgetflow_ollama ollama pull llama3.2:1b
+
+# 4. Ouvrir dans le navigateur
+#    http://localhost:8000
 ```
 
 ### Compte administrateur par défaut
 
 ```
-📧 Email    : admin@budgetflow.local
-🔑 Password : password
+Email    : admin@budgetflow.local
+Password : password
 ```
 
-> ⚠️ Changez le mot de passe admin dès le premier lancement en production.
+> ⚠️ Changez le mot de passe en production.
 
-### Commandes utiles
+### Commandes du quotidien
 
 ```bash
-# Voir les conteneurs (nginx, php, postgres, ollama)
+# État des 4 containers
 docker compose ps
 
-# Voir les logs
+# Logs en temps réel
 docker compose logs -f
 
-# Réinitialiser la base de données
-docker compose down -v && docker compose up -d --build
+# Logs d'un service précis
+docker compose logs -f php
 
-# Accéder à PostgreSQL
+# Accès PostgreSQL
 docker compose exec postgres psql -U budgetflow -d budgetflow
 
-# ── Ollama / IA ──────────────────────────────────────────────────
-# Trouver le conteneur Ollama
-docker ps | grep ollama
+# Reset complet (supprime toutes les données)
+docker compose down -v && docker compose up -d --build
 
-# Voir les modèles installés
-docker exec budgetflow_ollama ollama list
-
-# Télécharger le modèle IA (première fois)
-docker exec budgetflow_ollama ollama pull llama3.2:1b
-
-# Tester l'API Ollama
-curl http://localhost:11434/api/tags
-
-# Voir les logs Ollama
-docker logs budgetflow_ollama
+# Synchroniser un fichier modifié
+docker cp fichier.php budgetflow_php:/var/www/html/fichier.php
 ```
-
----
-
-## 📸 Captures d'écran
-
-<div align="center">
-
-|         Page de connexion         |              Tableau de bord              |
-| :-------------------------------: | :---------------------------------------: |
-| ![Login](images/screen_login.png) | ![Dashboard](images/screen_dashboard.png) |
-
-|          Gestion des budgets          |     Panneau d'administration      |
-| :-----------------------------------: | :-------------------------------: |
-| ![Budgets](images/screen_budgets.png) | ![Admin](images/screen_admin.png) |
-
-|            Gestion des transactions             |                 Catégories                  |
-| :---------------------------------------------: | :-----------------------------------------: |
-| ![Transactions](images/screen_transactions.png) | ![Categories](images/screen_categories.png) |
-
-> 📌 _Les captures seront ajoutées après finalisation de l'interface._
-
-</div>
 
 ---
 
 ## 🔐 Sécurité
 
-BudgetFlow implémente les bonnes pratiques de sécurité web :
-
 ```
-✅  Mots de passe hashés avec bcrypt (password_hash / password_verify)
-✅  Sessions sécurisées avec régénération d'ID après login
-✅  Protection CSRF sur tous les formulaires POST
-✅  Requêtes PDO préparées — zéro injection SQL possible
-✅  Contrôle d'accès par rôle sur chaque route
-✅  htmlspecialchars() sur toutes les sorties HTML (anti-XSS)
-✅  Compte inactif par défaut — activation obligatoire par admin
-✅  Validation des données côté serveur sur chaque formulaire
+✅  Mots de passe bcrypt  — password_hash() / password_verify()
+✅  Sessions sécurisées   — session_regenerate_id(true) après login
+✅  Protection CSRF       — token sur tous les formulaires POST
+✅  PDO préparé           — zéro injection SQL possible
+✅  Contrôle d'accès      — Auth::requireRole() en première ligne de chaque route
+✅  Anti-XSS              — htmlspecialchars() sur toutes les sorties HTML
+✅  Compte inactif        — activation obligatoire par l'administrateur
+✅  Données IA locales    — Ollama dans Docker, aucun appel externe
 ```
 
 ---
 
-## 📧 Système d'emails
+## 📧 Emails automatiques
 
-BudgetFlow envoie des emails automatiques via **PHPMailer + Resend SMTP** pour :
+PHPMailer + Gmail SMTP (STARTTLS 587)
 
-| Événement                    | Destinataire                 |
-| ---------------------------- | ---------------------------- |
-| ✅ Validation de compte      | Utilisateur                  |
-| 📨 Invitation budget partagé | Membre invité                |
-| ⚠️ Budget à 80%              | Membres du budget            |
-| 🚨 Budget dépassé            | Membres du budget            |
-| 🗑️ Demande de suppression    | Administrateur(s)            |
-| ✅ Confirmation suppression  | Utilisateur                  |
-| 📊 Récapitulatif mensuel     | Tous les utilisateurs actifs |
+| Événement | Destinataire |
+|-----------|-------------|
+| Validation de compte | Utilisateur |
+| Invitation budget partagé | Membre invité |
+| Budget à 80% | Membres du budget |
+| Budget dépassé (100%+) | Membres du budget |
+| Demande de suppression de compte | Administrateurs |
+| Confirmation de suppression | Utilisateur |
+| Email groupé admin | Tous les utilisateurs actifs |
 
 ---
 
 ## 🛠️ Stack technique
 
-| Couche               | Technologie              | Version      |
-| -------------------- | ------------------------ | ------------ |
-| **Frontend**         | HTML5 + Bootstrap        | 5.3.3        |
-| **JavaScript**       | Vanilla JS + Chart.js    | ES6+         |
-| **Backend**          | PHP natif (MVC maison)   | 8.3          |
-| **Base de données**  | PostgreSQL               | 16           |
-| **Serveur web**      | Nginx                    | Alpine       |
-| **Conteneurisation** | Docker + Compose         | v2           |
-| **Emails**           | SMTP natif Gmail         | STARTTLS 587 |
-| **Intelligence IA**  | Ollama + llama3.2:1b     | local Docker |
-| **Architecture**     | MVC sans framework       | —            |
+| Couche | Technologie | Version |
+|--------|-------------|---------|
+| **Frontend** | HTML5 + Bootstrap + Bootstrap Icons | 5.3.3 / 1.11 |
+| **Graphiques** | Chart.js | 4.4.6 |
+| **Backend** | PHP natif — MVC maison | 8.3 |
+| **Base de données** | PostgreSQL | 16 Alpine |
+| **Serveur web** | Nginx | Alpine |
+| **Conteneurisation** | Docker + Compose | v2 |
+| **Emails** | PHPMailer + Gmail SMTP | STARTTLS 587 |
+| **IA locale** | Ollama + llama3.2:1b | Docker CPU |
+| **Polices** | DM Sans · Plus Jakarta Sans · JetBrains Mono | Google Fonts |
+
+---
+
+## 📊 Avancement du projet
+
+```
+ Auth + Rôles + Admin          ████████████████████  100%  ✅
+ Dashboard + Charts            ████████████████████  100%  ✅
+ Transactions + Catégories     ████████████████████  100%  ✅
+ Budgets + Collaboration       ████████████████████  100%  ✅
+ Profil + Emails + Alertes     ████████████████████  100%  ✅
+ Assistant IA (Ollama)         ████████████████████  100%  ✅
+ Rapport PDF                   ████████████████████  100%  ✅
+ Design System Dark Mode       ████████████████████  100%  ✅
+```
 
 ---
 
@@ -470,43 +507,25 @@ BudgetFlow envoie des emails automatiques via **PHPMailer + Resend SMTP** pour :
 
 <br/>
 
-|                       <img src="https://github.com/mouradbenabdallah.png" width="80" style="border-radius:50%"/>                       |                    <img src="https://github.com/identicon.png" width="80" style="border-radius:50%"/>                    |
-| :------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: |
-|                                                        **Mourad Ben Abdallah**                                                         |                                                    **Aziz Ben Hmida**                                                    |
-|                                                  Backend · Auth · Categories · Emails                                                  |                                       Frontend · Dashboard · Transactions · Admin                                        |
+| | |
+|:---:|:---:|
+| <img src="https://github.com/mouradbenabdallah.png" width="90" style="border-radius:50%"/> | <img src="https://github.com/Aziz481450.png" width="90" style="border-radius:50%"/> |
+| **Mourad Ben Abdallah** | **Aziz Ben Hmida** |
+| Auth · Dashboard · Catégories | Transactions · Budgets · Admin |
+| Emails · IA · Rapport PDF · Design | Profil · Frontend · Tests |
 | [![GitHub](https://img.shields.io/badge/GitHub-mouradbenabdallah-181717?style=flat&logo=github)](https://github.com/mouradbenabdallah) | [![GitHub](https://img.shields.io/badge/GitHub-Aziz481450-181717?style=flat&logo=github)](https://github.com/Aziz481450) |
 
 <br/>
 
-**Encadrement académique**
-
 [![ITEAM](https://img.shields.io/badge/ITEAM_University-Tunis,_Tunisie-6C63FF?style=for-the-badge)](https://iteam-u.tn)
-
-</div>
-
----
-
-## 📄 Méthodologie
-
-Ce projet suit le **modèle de développement en cascade (Waterfall)** :
-
-```
-1. Analyse des besoins    ██████████ 100%  ✅
-2. Conception UML         ███        40%  ✅
-3. Implémentation         █░░        80%  🔄
-4. Tests                  █░░░░      60%  🔄
-5. Déploiement            ░░░░░░     0%  ⏳
-```
-
----
-
-<div align="center">
 
 <br/>
 
+---
+
 **BudgetFlow** — Projet Semestriel · ITEAM University · 2025–2026
 
-Mourad Ben Abdallah & Aziz Ben Hmida\*
+*Mourad Ben Abdallah & Aziz Ben Hmida*
 
 <br/>
 

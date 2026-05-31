@@ -1,201 +1,255 @@
-# BudgetFlow - Guide de lancement et configuration
+# BudgetFlow — Guide de lancement et configuration
+
+---
 
 ## 1. Architecture du projet
 
-BudgetFlow utilise une architecture MVC PHP native :
+BudgetFlow est un MVC PHP natif sans framework.
 
-- `public/index.php` : point d'entrée unique. Toutes les routes passent ici.
-- `core/` : outils communs comme le routeur, la session, l'authentification, CSRF et la connexion PDO.
-- `app/controllers/` : logique des pages, par exemple inscription et connexion.
-- `app/models/` : accès base de données avec PDO.
-- `app/views/` : fichiers HTML/PHP affichés à l'utilisateur.
-- `app/views/home.php` : page d'accueil publique affichée sur `/`.
-- `config/config.php` : configuration lue par PHP.
-- `database/schema.sql` : création des tables PostgreSQL et données de départ.
-- `docker-compose.yml` : démarre PHP, Nginx et PostgreSQL ensemble.
-- `docker/` : configuration PHP-FPM et Nginx.
+| Dossier / Fichier | Rôle |
+|---|---|
+| `public/index.php` | Point d'entrée unique — charge toutes les classes et enregistre les routes |
+| `core/` | Routeur, session, auth, CSRF, connexion PDO |
+| `app/controllers/` | Logique métier de chaque page |
+| `app/models/` | Accès base de données (PDO préparé) |
+| `app/views/` | Templates PHP affichés à l'utilisateur |
+| `config/config.php` | Configuration centrale lue via `getenv()` |
+| `database/schema.sql` | Création des 5 tables + données initiales |
+| `docker-compose.yml` | Orchestration des 4 services Docker |
+| `docker/` | Dockerfile PHP + config Nginx |
+| `public/animations/` | GIFs (ai-chat.gif, pdf.gif) |
 
-## 2. Services Docker
+---
 
-Le fichier `docker-compose.yml` démarre trois services :
+## 2. Les 4 services Docker
 
-| Service    | Rôle                                           |
-| ---------- | ---------------------------------------------- |
-| `nginx`    | Serveur web public sur `http://localhost:8000` |
-| `php`      | Exécute le code PHP avec PHP-FPM               |
-| `postgres` | Base de données PostgreSQL 16                  |
+| Service | Conteneur | Rôle | Port |
+|---------|-----------|------|------|
+| `nginx` | `budgetflow_nginx` | Serveur web — reçoit toutes les requêtes HTTP | `8000:80` |
+| `php` | `budgetflow_php` | Exécute le code PHP-FPM 8.3 | interne `9000` |
+| `postgres` | `budgetflow_postgres` | Base de données PostgreSQL 16 | interne `5432` |
+| `ollama` | `budgetflow_ollama` | Moteur IA local (llama3.2:1b) | `11434:11434` |
 
-Important : PostgreSQL n'expose plus le port `5432` sur ton Linux. C'est volontaire pour éviter le conflit avec un PostgreSQL déjà installé sur la machine. PHP se connecte à PostgreSQL via le réseau Docker interne avec le host `postgres`.
+Les services se parlent par leur **nom de service** sur le réseau Docker interne `budgetflow`.  
+PHP utilise `postgres` comme host (pas `localhost`) et `ollama:11434` pour l'IA.
 
-## 3. Lancer le projet
+---
 
-Depuis le dossier du projet :
+## 3. Premier lancement
 
 ```bash
+# 1. Démarrer les 4 services
 cd ~/Downloads/budgetflow
-docker compose up --build
+docker compose up -d --build
+
+# 2. Télécharger le modèle IA (une seule fois — environ 1.3 Go)
+docker exec budgetflow_ollama ollama pull llama3.2:1b
+
+# 3. Vérifier que tout tourne
+docker compose ps
+
+# 4. Ouvrir l'application
+# http://localhost:8000
 ```
 
-En arrière-plan :
+**Compte admin par défaut :**
+```
+Email    : admin@budgetflow.local
+Password : password
+```
+
+---
+
+## 4. Lancement quotidien
 
 ```bash
+# Les volumes conservent les données et le modèle IA
+docker compose up -d
+
+# Vérifier que le modèle IA est toujours là
+docker exec budgetflow_ollama ollama list
+```
+
+---
+
+## 5. Reset complet (supprime toutes les données)
+
+```bash
+# Supprime conteneurs + volumes (BDD et modèles IA effacés)
+docker compose down -v
+
+# Relancer depuis zéro
 docker compose up -d --build
+docker exec budgetflow_ollama ollama pull llama3.2:1b
 ```
 
-Ouvre ensuite :
+---
 
-```text
-http://localhost:8000
-```
-
-La première page affichée est maintenant la page d'accueil publique. Les boutons de cette page mènent vers `/login`, `/register` ou le tableau de bord.
-
-## 4. Compte admin de test
-
-Le fichier `database/schema.sql` crée un admin au premier démarrage de la base :
-
-```text
-Email: admin@budgetflow.local
-Password: password
-```
-
-Les comptes créés avec `/register` sont enregistrés avec `is_active = false`. C'est normal : la fonction admin de validation viendra plus tard.
-
-## 5. Configuration de la base de données
+## 6. Configuration base de données
 
 Les identifiants sont dans `docker-compose.yml` :
 
 ```yaml
-POSTGRES_DB: budgetflow
-POSTGRES_USER: budgetflow
+POSTGRES_DB:       budgetflow
+POSTGRES_USER:     budgetflow
 POSTGRES_PASSWORD: budgetflow
 ```
 
-Le PHP lit ces mêmes valeurs via les variables :
+PHP lit ces valeurs via `getenv()` dans `config/config.php` :
 
 ```yaml
-DB_HOST: postgres
-DB_PORT: 5432
-DB_NAME: budgetflow
-DB_USER: budgetflow
+DB_HOST:     postgres   # ← nom du service Docker, JAMAIS localhost
+DB_PORT:     5432
+DB_NAME:     budgetflow
+DB_USER:     budgetflow
 DB_PASSWORD: budgetflow
 ```
 
-Dans `config/config.php`, ces valeurs sont récupérées avec `getenv()`. Si une variable n'existe pas, une valeur par défaut est utilisée.
+> **Important :** `DB_HOST=postgres` et non `localhost`.  
+> Depuis le container PHP, `localhost` désigne le container PHP lui-même.
 
-Ne mets pas `DB_HOST=localhost` dans Docker. Depuis le conteneur PHP, `localhost` veut dire "le conteneur PHP lui-même". Il faut utiliser `postgres`, qui est le nom du service Compose.
+---
 
-## 6. Initialisation du schéma SQL
-
-Cette ligne dans `docker-compose.yml` monte le schéma dans PostgreSQL :
+## 7. Initialisation du schéma SQL
 
 ```yaml
-./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+# docker-compose.yml
+volumes:
+  - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
 ```
 
-PostgreSQL exécute ce fichier seulement quand le volume `postgres_data` est créé pour la première fois.
-
-Si tu modifies `schema.sql` après le premier lancement, les changements ne seront pas rejoués automatiquement. Pour recréer la base :
+PostgreSQL exécute ce fichier **uniquement à la création du volume** (`postgres_data`).  
+Si `schema.sql` est modifié après le premier lancement :
 
 ```bash
-docker compose down -v
-docker compose up -d --build
+docker compose down -v && docker compose up -d --build
 ```
 
-Attention : `down -v` supprime les données de la base.
+---
 
-## 7. Commandes utiles
+## 8. Commandes utiles
 
-Voir les conteneurs :
+### Démarrage / Arrêt
 
 ```bash
-docker compose ps
+docker compose up -d                      # démarrer en arrière-plan
+docker compose up -d --build              # rebuild l'image PHP (après modif Dockerfile)
+docker compose down                       # arrêter (données conservées)
+docker compose down -v                    # arrêter + supprimer volumes (reset BDD)
+docker compose restart php                # redémarrer un seul service
 ```
 
-Voir les logs :
+### État et logs
 
 ```bash
-docker compose logs -f
+docker compose ps                         # état des 4 containers
+docker compose logs -f                    # tous les logs en temps réel
+docker compose logs -f php                # logs PHP uniquement
+docker compose logs --tail=50 php         # 50 dernières lignes PHP
+docker compose logs -f postgres           # logs PostgreSQL
+docker compose logs -f ollama             # logs Ollama / IA
 ```
 
-Voir les logs PostgreSQL seulement :
+### Base de données
 
 ```bash
-docker compose logs postgres
-```
-
-Entrer dans PostgreSQL :
-
-```bash
+# Console SQL interactive
 docker compose exec postgres psql -U budgetflow -d budgetflow
+
+# Commandes SQL utiles
+\dt                   -- lister les tables
+\d users              -- structure d'une table
+SELECT * FROM users;  -- voir tous les utilisateurs
+\q                    -- quitter
+
+# Lister les utilisateurs en une ligne
+docker compose exec postgres psql -U budgetflow -d budgetflow \
+  -c "SELECT id, name, email, role, is_active FROM users;"
 ```
 
-Lister les utilisateurs :
+### Synchroniser un fichier modifié vers les containers
 
 ```bash
-docker compose exec postgres psql -U budgetflow -d budgetflow -c "SELECT id, email, role, is_active FROM users;"
+# Après modification d'une vue ou d'un controller
+docker cp chemin/local/fichier.php budgetflow_php:/var/www/html/chemin/fichier.php
+docker cp chemin/local/fichier.php budgetflow_nginx:/var/www/html/chemin/fichier.php
 ```
 
-Arrêter les services :
+### Assistant IA (Ollama)
 
 ```bash
-docker compose down
+docker exec budgetflow_ollama ollama list          # modèles installés
+docker exec budgetflow_ollama ollama pull llama3.2:1b  # télécharger le modèle
+docker exec -it budgetflow_ollama ollama run llama3.2:1b  # chat interactif
+docker exec budgetflow_php curl -s http://ollama:11434/api/tags  # test connectivité
 ```
 
-Arrêter et supprimer la base :
+---
 
-```bash
-docker compose down -v
+## 9. Comment fonctionne une requête
+
+```
+Navigateur → http://localhost:8000/dashboard
+      ↓
+  Nginx (port 80)
+      ↓  try_files → index.php
+  PHP-FPM (port 9000)
+      ↓  public/index.php
+  Router::dispatch()
+      ↓  [DashboardController, 'index']
+  DashboardController::index()
+      ↓  Auth::requireRole('user')
+      ↓  new Transaction() → Database::getInstance() → PostgreSQL
+      ↓  require view/dashboard/index.php
+  HTML → Nginx → Navigateur
 ```
 
-## 8. Comment fonctionne une requête
+---
 
-1. Le navigateur appelle `http://localhost:8000/login`.
-2. Nginx reçoit la requête.
-3. Nginx envoie la requête PHP vers le service `php:9000`.
-4. `public/index.php` charge les classes et enregistre les routes.
-5. `core/Router.php` appelle `AuthController`.
-6. Le contrôleur utilise `User.php` pour parler à PostgreSQL via `Database.php`.
-7. La vue PHP est rendue et renvoyée au navigateur.
+## 10. Problèmes fréquents
 
-## 9. Problèmes fréquents
-
-Si le port `8000` est déjà utilisé, change cette ligne dans `docker-compose.yml` :
+### Port 8000 déjà utilisé
 
 ```yaml
+# docker-compose.yml
 ports:
-  - "8001:80"
+  - "8001:80"   # changer 8000 → 8001
 ```
 
-Puis ouvre :
-
-```text
-http://localhost:8001
-```
-
-Si le login admin échoue après une modification du seed SQL, recrée la base :
+### Login admin échoue après modif du seed SQL
 
 ```bash
-docker compose down -v
-docker compose up -d --build
+docker compose down -v && docker compose up -d --build
 ```
 
-Si PostgreSQL n'est pas lancé :
+### L'assistant IA ne répond pas
 
 ```bash
-docker compose logs postgres
+# 1. Vérifier le container Ollama
+docker ps | grep ollama
+
+# 2. Vérifier le modèle
+docker exec budgetflow_ollama ollama list
+
+# 3. Tester depuis PHP
+docker exec budgetflow_php curl -sf http://ollama:11434/api/tags
+
+# 4. Si "ollama" n'est pas résolu (problème réseau Docker)
+docker network connect --alias ollama budgetflow_budgetflow budgetflow_ollama
 ```
 
-docker compose up --build -d
-docker compose exec -T postgres psql -U budgetflow -d budgetflow < database/seed_dashboard.sql
-Then open:
+### Erreur "container name already in use"
 
-text
+```bash
+docker rm -f budgetflow_ollama   # ou le container concerné
+docker compose up -d
+```
 
-http://localhost:8000/login
-Use:
+### Modifications de code non prises en compte
 
-text
-
-Email: demo@budgetflow.local
-Password: password
+```bash
+# Les fichiers PHP sont servis directement depuis le volume monté
+# Pas besoin de rebuild — mais si un fichier est copié manuellement :
+docker cp public/style.css budgetflow_php:/var/www/html/public/style.css
+docker cp public/style.css budgetflow_nginx:/var/www/html/public/style.css
+```

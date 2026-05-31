@@ -163,20 +163,14 @@ class DashboardController
     }
 
     /**
-     * Render a view within the authenticated layout.
-     * 
-     * Extracts data array into variables for the view,
-     * captures the view output, and renders it within the app layout.
-     * 
-     * @param string $view View file path (relative to app/views/)
-     * @param array<string, mixed> $data Variables to extract into the view
+     * Render a view within the authenticated app layout.
+     *
+     * @param string               $view Relative path under app/views/ (no .php)
+     * @param array<string, mixed> $data Variables to extract into the view scope
      */
     private function render(string $view, array $data = []): void
     {
-        // Extract variables from data array
-        foreach ($data as $key => $value) {
-            $$key = $value;
-        }
+        extract($data, EXTR_SKIP);
 
         ob_start();
         require __DIR__ . '/../views/' . $view . '.php';

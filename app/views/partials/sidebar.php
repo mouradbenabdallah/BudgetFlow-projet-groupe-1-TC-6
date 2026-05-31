@@ -30,9 +30,7 @@ $mainNavigation = [
 ];
 
 $accountNavigation = [
-    ['path' => '/notifications', 'label' => 'Notifications', 'icon' => 'bi-bell'],
     ['path' => '/profile', 'label' => 'Profil', 'icon' => 'bi-person'],
-    ['path' => '/settings', 'label' => 'Paramètres', 'icon' => 'bi-gear'],
 ];
 $isAdmin = ($sidebarUser['role'] ?? 'user') === 'admin';
 ?>

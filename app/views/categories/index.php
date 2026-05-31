@@ -12,31 +12,34 @@ $totalIncome = $totalIncome ?? 0;
 
 $formatMoney = static fn (mixed $amount): string => number_format((float) $amount, 2, ',', ' ') . ' DT';
 
-$categoryEmojis = [
-    'alimentation' => '🍔',
-    'transport' => '🚗',
-    'shopping' => '🛍️',
-    'santé' => '💪',
-    'services publics' => '⚡',
-    'salaire' => 'bi bi-cash-stack',
-    'freelance' => '💻',
-    'divertissement' => '🎬',
-    'éducation' => '📚',
-    'maison' => '🏠',
-    'assurance' => '🛡️',
-    'logement' => '🏠',
-    'loisirs' => '🎯',
-    'études' => '📚',
-    'autre' => '📁',
+// Correspondance nom de catégorie → classe Bootstrap Icon.
+$categoryIcons = [
+    'alimentation'    => 'bi-basket2',
+    'transport'       => 'bi-car-front',
+    'shopping'        => 'bi-bag',
+    'santé'           => 'bi-heart-pulse',
+    'services publics'=> 'bi-lightning-charge',
+    'salaire'         => 'bi-cash-stack',
+    'freelance'       => 'bi-laptop',
+    'divertissement'  => 'bi-film',
+    'éducation'       => 'bi-book',
+    'maison'          => 'bi-house',
+    'assurance'       => 'bi-shield-check',
+    'logement'        => 'bi-building',
+    'loisirs'         => 'bi-controller',
+    'études'          => 'bi-mortarboard',
+    'autre'           => 'bi-folder',
 ];
 
 $defaultPalette = ['#00ED64', '#E11D48', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6', '#6366F1'];
 
 $autoOpenModal = !empty($createState) ? 'createCategoryModal' : (!empty($editState) ? 'editCategoryModal' : '');
 
-$getEmoji = static function (string $name) use ($categoryEmojis): string {
+// Retourne un tag <i> Bootstrap Icon correspondant au nom de catégorie.
+$getIcon = static function (string $name) use ($categoryIcons): string {
     $lower = mb_strtolower($name, 'UTF-8');
-    return $categoryEmojis[$lower] ?? '📁';
+    $cls   = $categoryIcons[$lower] ?? 'bi-folder';
+    return '<i class="bi ' . $cls . '"></i>';
 };
 
 $inferType = static function (array $cat): string {
@@ -140,7 +143,7 @@ $getTintedBg = static function (string $hex): string {
                 <?php
                 $catType = $inferType($category);
                 $catName = $category['name'] ?? '';
-                $emoji = $getEmoji($catName);
+                $emoji = $getIcon($catName);
                 $isPersonal = in_array($category, $personalCategories, true);
                 $catColor = $getCatColor($category);
                 $tintedBg = $getTintedBg($catColor);

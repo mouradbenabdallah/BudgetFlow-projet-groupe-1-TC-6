@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 /**
  * Mailer — client SMTP natif PHP pour Gmail (STARTTLS sur port 587).
- * Pas de dépendance externe : utilise stream_socket_client + STARTTLS.
  *
- * Configuration via config/config.php → clé 'mail' :
- *   host       : smtp.gmail.com
- *   port       : 587
- *   username   : votre.adresse@gmail.com
- *   password   : mot de passe d'application Gmail (16 caractères)
- *   from_email : votre.adresse@gmail.com
- *   from_name  : BudgetFlow
+ * Pas de dépendance externe : connexion TCP brute + upgrade STARTTLS + AUTH LOGIN.
+ * Corps de l'email encodé en base64 (Content-Transfer-Encoding: base64).
+ *
+ * Configuration via config/config.php → clé 'mail' (lue depuis les variables d'env) :
+ *   MAIL_HOST       : smtp.gmail.com
+ *   MAIL_PORT       : 587
+ *   MAIL_USERNAME   : votre.adresse@gmail.com
+ *   MAIL_PASSWORD   : mot de passe d'application Gmail (16 caractères, sans espaces)
+ *                     Générer : myaccount.google.com → Sécurité → Mots de passe des applications
+ *   MAIL_FROM_EMAIL : adresse expéditeur (égale à MAIL_USERNAME pour Gmail)
+ *   MAIL_FROM_NAME  : nom affiché dans le champ "De :"
+ *
+ * Usage minimal :
+ *   Mailer::sendMail('dest@example.com', 'Sujet', '<p>Corps HTML</p>');
  */
 class Mailer
 {
@@ -67,7 +73,7 @@ class Mailer
     }
 
     /**
-     * Méthode statique pour envoyer sans instanciation explicite.
+     * Méthode statique pour envoyer sans instanciation explicite (corps HTML direct).
      */
     public static function sendMail(string $to, string $subject, string $body): bool
     {
@@ -226,5 +232,131 @@ class Mailer
     private function localHostname(): string
     {
         return gethostname() ?: 'localhost';
+    }
+
+    // ── Static helpers — email notification methods ───────────────────────────
+
+    /**
+     * Load an email template and return the rendered HTML.
+     *
+     * @param string               $template Nom du fichier sans .php (dans app/views/emails/)
+     * @param array<string, mixed> $data     Variables à injecter dans le template
+     */
+    private static function renderTemplate(string $template, array $data): string
+    {
+        extract($data, EXTR_SKIP);
+        ob_start();
+        require __DIR__ . '/../app/views/emails/' . $template . '.php';
+        return (string) ob_get_clean();
+    }
+
+    /** Notifie un utilisateur que son compte a été activé. */
+    public static function sendAccountValidated(array $user): bool
+    {
+        try {
+            $loginUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http')
+                      . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/login';
+            $body = self::renderTemplate('account_validated', [
+                'userName' => (string) ($user['name']  ?? ''),
+                'loginUrl' => $loginUrl,
+            ]);
+            return self::sendMail((string) ($user['email'] ?? ''), 'Votre compte BudgetFlow a été activé', $body);
+        } catch (\Throwable $e) {
+            error_log('[Mailer] sendAccountValidated : ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /** Envoie une invitation à rejoindre un budget partagé. */
+    public static function sendBudgetInvitation(array $invitee, array $inviter, array $budget): bool
+    {
+        try {
+            $budgetUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http')
+                       . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/budgets/show?id=' . (int) ($budget['id'] ?? 0);
+            $body = self::renderTemplate('budget_invitation', [
+                'invitee'   => $invitee,
+                'inviter'   => $inviter,
+                'budget'    => $budget,
+                'budgetUrl' => $budgetUrl,
+            ]);
+            $subject = '[BudgetFlow] Invitation — ' . ($budget['name'] ?? 'Budget partagé');
+            return self::sendMail((string) ($invitee['email'] ?? ''), $subject, $body);
+        } catch (\Throwable $e) {
+            error_log('[Mailer] sendBudgetInvitation : ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Envoie une alerte de dépassement de plafond budget.
+     *
+     * @param float $percent Pourcentage atteint (>= 80 pour déclencher)
+     * @param float $spent   Montant dépensé
+     * @param float $limit   Plafond du budget
+     */
+    public static function sendBudgetAlert(array $user, array $budget, float $percent, float $spent, float $limit): bool
+    {
+        try {
+            $budgetUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http')
+                       . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/budgets/show?id=' . (int) ($budget['id'] ?? 0);
+            $body = self::renderTemplate('budget_alert', [
+                'user'      => $user,
+                'budget'    => $budget,
+                'percent'   => $percent,
+                'spent'     => $spent,
+                'limit'     => $limit,
+                'budgetUrl' => $budgetUrl,
+            ]);
+            $subject = $percent >= 100
+                ? '[BudgetFlow] Budget dépassé — ' . ($budget['name'] ?? '')
+                : '[BudgetFlow] Alerte budget — ' . ($budget['name'] ?? '') . ' à ' . round($percent) . '%';
+            return self::sendMail((string) ($user['email'] ?? ''), $subject, $body);
+        } catch (\Throwable $e) {
+            error_log('[Mailer] sendBudgetAlert : ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Envoie une demande de suppression de compte à tous les admins actifs.
+     *
+     * @param array<string, mixed> $requestingUser Utilisateur demandant la suppression
+     */
+    public static function sendDeletionRequestToAdmins(array $requestingUser): bool
+    {
+        try {
+            $admins  = (new User())->findAllAdmins();
+            $adminUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http')
+                      . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/admin/users';
+            $ok = true;
+            foreach ($admins as $admin) {
+                $body = self::renderTemplate('deletion_request_admin', [
+                    'requestingUser' => $requestingUser,
+                    'adminUrl'       => $adminUrl,
+                ]);
+                $subject = '[Admin BudgetFlow] Demande de suppression — ' . ($requestingUser['name'] ?? '');
+                if (!self::sendMail((string) ($admin['email'] ?? ''), $subject, $body)) {
+                    $ok = false;
+                }
+            }
+            return $ok;
+        } catch (\Throwable $e) {
+            error_log('[Mailer] sendDeletionRequestToAdmins : ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /** Confirme à l'utilisateur que son compte a été supprimé. */
+    public static function sendDeletionConfirmed(array $user): bool
+    {
+        try {
+            $body = self::renderTemplate('deletion_confirmed', [
+                'user' => $user,
+            ]);
+            return self::sendMail((string) ($user['email'] ?? ''), 'Votre compte BudgetFlow a été supprimé', $body);
+        } catch (\Throwable $e) {
+            error_log('[Mailer] sendDeletionConfirmed : ' . $e->getMessage());
+            return false;
+        }
     }
 }

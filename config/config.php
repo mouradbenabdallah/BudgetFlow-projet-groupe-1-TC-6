@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * Application configuration.
+ *
+ * All sensitive values are read from environment variables (set in docker-compose.yml).
+ * Hard-coded fallbacks are safe defaults for local development only.
+ *
+ * Keys:
+ *   app      — name, environment, public URL, timezone
+ *   database — PostgreSQL connection (host must be "postgres" inside Docker)
+ *   mail     — Gmail SMTP via STARTTLS on port 587;
+ *              MAIL_PASSWORD must be a Gmail App Password, not your account password
+ */
 return [
     'app' => [
         'name' => 'BudgetFlow',

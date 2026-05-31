@@ -150,6 +150,11 @@ class TransactionController
         $this->transactions()->create($payload);
         $this->session->setFlash('success', 'La transaction a été créée avec succès.');
 
+        // Alerte budget par email si la transaction est une dépense et franchit un seuil.
+        if (($payload['type'] ?? '') === 'expense' && !empty($payload['budget_id'])) {
+            $this->checkBudgetAlert((int) $payload['budget_id'], $user);
+        }
+
         $budgetId = $input['budget_id'] ?? null;
         if ($budgetId !== null && is_numeric($budgetId) && (int) $budgetId > 0) {
             $this->redirect('/budgets/show?id=' . (int) $budgetId);
@@ -537,7 +542,68 @@ class TransactionController
     }
 
     /**
-     * Perform an HTTP 302 redirect. Throws RedirectException to halt execution.
+     * Check whether a budget alert threshold has been crossed and send emails.
+     * Session guard prevents more than one alert per budget per 24 hours.
+     *
+     * @param int                  $budgetId Budget ID to check
+     * @param array<string, mixed> $user     Currently logged-in user (for logging)
+     */
+    private function checkBudgetAlert(int $budgetId, array $user): void
+    {
+        try {
+            $budgetModel = $this->budgets();
+            $budget      = $budgetModel->findById($budgetId);
+
+            if ($budget === null || empty($budget['amount_limit'])) {
+                return;
+            }
+
+            $limit = (float) $budget['amount_limit'];
+            if ($limit <= 0) {
+                return;
+            }
+
+            $spent   = $budgetModel->getTotalSpent($budgetId);
+            $percent = ($spent / $limit) * 100;
+
+            if ($percent < 80) {
+                return;
+            }
+
+            // Guard anti-doublon : une alerte par budget toutes les 24h.
+            $alertKey  = 'alert_sent_' . $budgetId;
+            $lastAlert = $this->session->get($alertKey);
+            if ($lastAlert !== null && (time() - (int) $lastAlert) < 86400) {
+                return;
+            }
+
+            // Récupère owner + membres et envoie l'alerte à chacun.
+            $members = $budgetModel->getMembers($budgetId);
+            $userModel = new User();
+            $owner   = $userModel->findById((int) ($budget['owner_id'] ?? 0));
+            if ($owner !== null) {
+                $members[] = $owner;
+            }
+
+            // Déduplique par id.
+            $seen = [];
+            foreach ($members as $member) {
+                $mid = (int) ($member['id'] ?? 0);
+                if ($mid === 0 || isset($seen[$mid])) {
+                    continue;
+                }
+                $seen[$mid] = true;
+                Mailer::sendBudgetAlert($member, $budget, $percent, $spent, $limit);
+            }
+
+            $this->session->set($alertKey, (string) time());
+        } catch (\Throwable $e) {
+            error_log('[TransactionController] checkBudgetAlert : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send an HTTP 302 redirect and halt execution via RedirectException.
      *
      * @param string $path Target URL path
      */

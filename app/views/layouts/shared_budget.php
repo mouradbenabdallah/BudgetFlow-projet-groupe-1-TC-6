@@ -23,19 +23,28 @@ $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'),
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="/style.css?v=7" rel="stylesheet">
+    <!-- Anti-FOUC : applique le thème avant le rendu pour éviter le flash -->
+    <script>(function(){var t=localStorage.getItem('bf-theme')||'light';document.documentElement.dataset.theme=t;}());</script>
+    <link href="/style.css?v=10" rel="stylesheet">
     <link rel="icon" href="/img/favicon-budget.png" type="image/png">
     <link rel="icon" href="/img/favicon-budget.ico" type="image/x-icon">
+    <script src="/script.js?v=3"></script>
 </head>
 <body class="bf-page-app">
     <div class="bf-app-shell">
         <?php require __DIR__ . '/../partials/sidebar.php'; ?>
+        <div class="bf-sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
 
         <main class="bf-main">
             <header class="bf-topbar">
-                <div>
-                    <h1 class="bf-page-title"><?= $safePageTitle ?></h1>
-                    <p class="bf-page-subtitle">Collaborez sur les dépenses de groupe et finances partagées</p>
+                <div class="bf-topbar-lead">
+                    <button class="bf-menu-toggle" id="sidebar-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">
+                        <i class="bi bi-list" aria-hidden="true"></i>
+                    </button>
+                    <div>
+                        <h1 class="bf-page-title"><?= $safePageTitle ?></h1>
+                        <p class="bf-page-subtitle">Collaborez sur les dépenses de groupe et finances partagées</p>
+                    </div>
                 </div>
                 <div class="bf-topbar-actions">
                     <form class="bf-search" role="search">
@@ -43,9 +52,8 @@ $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'),
                         <label class="visually-hidden" for="bf-search-shared">Rechercher</label>
                         <input id="bf-search-shared" type="search" name="q" placeholder="Search..." autocomplete="off">
                     </form>
-                    <button class="bf-icon-button" type="button" aria-label="Notifications">
-                        <i class="bi bi-bell" aria-hidden="true"></i>
-                        <span class="bf-notification-dot" aria-hidden="true"></span>
+                    <button class="bf-theme-toggle" id="theme-toggle" type="button" title="Mode sombre">
+                        <i class="bi bi-moon-fill" id="theme-icon"></i>
                     </button>
                     <span class="bf-top-avatar" aria-label="Utilisateur connecté"><?= $safeInitials ?></span>
                     <form method="post" action="/logout" class="bf-form-inline">

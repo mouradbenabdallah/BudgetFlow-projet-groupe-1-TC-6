@@ -34,7 +34,9 @@ $isActive = static fn (string $path): string =>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="/style.css?v=7" rel="stylesheet">
+    <!-- Anti-FOUC : applique le thème avant le rendu pour éviter le flash -->
+    <script>(function(){var t=localStorage.getItem('bf-theme')||'light';document.documentElement.dataset.theme=t;}());</script>
+    <link href="/style.css?v=10" rel="stylesheet">
     <link rel="icon" href="/img/favicon-budget.png" type="image/png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
     <style>
@@ -219,7 +221,7 @@ $isActive = static fn (string $path): string =>
 <div style="display:flex;min-height:100vh;">
 
     <!-- ── Sidebar ── -->
-    <aside style="width:240px;min-height:100vh;background:#001e2b;border-right:1px solid #3d4f58;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;padding:20px 12px 16px;overflow-y:auto;" aria-label="Navigation administration">
+    <aside class="adm-sidebar" style="width:240px;min-height:100vh;background:#001e2b;border-right:1px solid #3d4f58;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;padding:20px 12px 16px;overflow-y:auto;" aria-label="Navigation administration">
 
         <!-- Logo -->
         <div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid #3d4f58;padding-bottom:20px;margin-bottom:8px;">
@@ -269,6 +271,13 @@ $isActive = static fn (string $path): string =>
         <!-- Nav compte -->
         <nav style="border-top:1px solid #3d4f58;padding-top:12px;margin-top:16px;" aria-label="Compte">
             <span class="adm-section-label">Compte</span>
+
+            <a href="/admin/profile" class="adm-sidebar-link <?= $isActive('/admin/profile') ?>">
+                <i class="bi bi-person-circle" style="font-size:16px;width:16px;text-align:center;"></i>
+                <span>Mon profil</span>
+                <?php if ($isActive('/admin/profile') === 'active'): ?><span class="adm-dot"></span><?php endif; ?>
+            </a>
+
             <form method="post" action="/logout">
                 <?= CSRF::getTokenField() ?>
                 <button type="submit" class="adm-sidebar-link" style="color:#e57373;">
@@ -278,35 +287,44 @@ $isActive = static fn (string $path): string =>
             </form>
         </nav>
 
-        <!-- Profil -->
-        <div style="margin-top:16px;padding:10px 8px;border-radius:12px;background:#1c2d38;border:1px solid #3d4f58;display:flex;align-items:center;gap:10px;">
+        <!-- Profil bas — cliquable vers /admin/profile -->
+        <a href="/admin/profile" style="margin-top:16px;padding:10px 8px;border-radius:12px;background:#1c2d38;border:1px solid #3d4f58;display:flex;align-items:center;gap:10px;text-decoration:none;transition:border-color .2s;"
+           onmouseover="this.style.borderColor='#00684a'" onmouseout="this.style.borderColor='#3d4f58'">
             <div class="adm-avatar" style="background:#00684a;">
                 <?= $adminInit ?>
             </div>
-            <div style="min-width:0;">
+            <div style="min-width:0;flex:1;">
                 <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= $safeName ?></div>
                 <div style="font-size:11px;color:#5c6c75;">Administrateur</div>
             </div>
-        </div>
+            <i class="bi bi-chevron-right" style="font-size:11px;color:#3d4f58;flex-shrink:0;"></i>
+        </a>
     </aside>
 
+    <!-- Voile mobile pour fermer la sidebar -->
+    <div class="bf-sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
+
     <!-- ── Main ── -->
-    <div style="flex:1;margin-left:240px;display:flex;flex-direction:column;min-height:100vh;">
+    <div class="adm-main" style="flex:1;margin-left:240px;display:flex;flex-direction:column;min-height:100vh;">
 
         <!-- Header -->
-        <header style="height:64px;background:#fff;border-bottom:1px solid #b8c4c2;box-shadow:rgba(0,30,43,0.06) 0px 2px 8px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:50;">
-            <div>
-                <span class="adm-page-eyebrow">Admin Panel</span>
-                <h1 class="adm-page-title"><?= $safeTitle ?></h1>
+        <header class="adm-main-header" style="height:64px;background:#fff;border-bottom:1px solid #b8c4c2;box-shadow:rgba(0,30,43,0.06) 0px 2px 8px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:50;">
+            <div class="bf-topbar-lead">
+                <button class="bf-menu-toggle" id="sidebar-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">
+                    <i class="bi bi-list" aria-hidden="true"></i>
+                </button>
+                <div>
+                    <span class="adm-page-eyebrow">Admin Panel</span>
+                    <h1 class="adm-page-title"><?= $safeTitle ?></h1>
+                </div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
                 <div class="adm-search">
                     <i class="bi bi-search" style="color:#b8c4c2;font-size:13px;"></i>
                     <input type="search" placeholder="Rechercher..." autocomplete="off">
                 </div>
-                <button class="adm-bell" type="button" aria-label="Notifications">
-                    <i class="bi bi-bell"></i>
-                    <span class="adm-bell-dot"></span>
+                <button class="bf-theme-toggle" id="theme-toggle" type="button" title="Mode sombre">
+                    <i class="bi bi-moon-fill" id="theme-icon"></i>
                 </button>
                 <?php if ($pendingBadge > 0): ?>
                 <a href="/admin/users?filter=pending" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;text-decoration:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#d97706;">
@@ -318,13 +336,14 @@ $isActive = static fn (string $path): string =>
         </header>
 
         <!-- Contenu -->
-        <main style="flex:1;padding:28px;overflow-y:auto;">
+        <main class="adm-content-bg" style="flex:1;padding:28px;overflow-y:auto;">
             <?= $content ?? '' ?>
         </main>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/script.js?v=3"></script>
 <?= $scripts ?? '' ?>
 </body>
 </html>

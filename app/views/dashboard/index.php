@@ -1,7 +1,7 @@
 <?php
 // Vue du tableau de bord utilisateur.
 $e = static fn (mixed $value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
-$formatTnd = static fn (mixed $amount): string => number_format((float) $amount, 2, ',', ' ') . ' TND';
+$formatTnd = static fn (mixed $amount): string => number_format((float) $amount, 2, ',', ' ') . ' DT';
 $formatDate = static function (mixed $date): string {
     $timestamp = strtotime((string) $date);
     return $timestamp !== false ? date('d/m/Y', $timestamp) : '';
@@ -59,7 +59,7 @@ $summaryCards = [
     [
         'label' => 'SOLDE NET',
         'value' => $formatTnd($balance),
-        'icon' => 'bi-currency-dollar',
+        'icon' => 'bi-wallet2',
         'iconBg' => 'rgba(13,110,253,0.1)',
         'iconBorder' => 'rgba(13,110,253,0.25)',
         'iconColor' => '#0d6efd',

@@ -54,14 +54,24 @@ CREATE TABLE IF NOT EXISTS budget_members (
     UNIQUE (budget_id, user_id)
 );
 
--- Compte admin de développement.
--- Mot de passe en clair pour tester : password
+-- Compte admin de développement. Mot de passe : password
 INSERT INTO users (name, email, password, role, is_active)
 VALUES (
     'Administrateur BudgetFlow',
     'admin@budgetflow.local',
     '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
     'admin',
+    true
+)
+ON CONFLICT (email) DO NOTHING;
+
+-- Compte utilisateur de démonstration. Mot de passe : password
+INSERT INTO users (name, email, password, role, is_active)
+VALUES (
+    'Demo Utilisateur',
+    'user@budgetflow.local',
+    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    'user',
     true
 )
 ON CONFLICT (email) DO NOTHING;

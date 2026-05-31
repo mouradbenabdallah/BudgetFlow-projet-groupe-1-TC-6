@@ -1,6 +1,6 @@
 <?php
 $e = static fn (mixed $value): string => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
-$formatMoney = static fn (mixed $amount): string => number_format((float) $amount, 2, ',', ' ') . ' TND';
+$formatMoney = static fn (mixed $amount): string => number_format((float) $amount, 2, ',', ' ') . ' DT';
 $filters = $filters ?? [];
 $transactions = $transactions ?? [];
 $budgets = $budgets ?? [];

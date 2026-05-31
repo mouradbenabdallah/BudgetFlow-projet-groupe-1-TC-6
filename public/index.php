@@ -32,6 +32,7 @@ require_once __DIR__ . '/../app/models/Budget.php';
 require_once __DIR__ . '/../app/models/Transaction.php';
 
 // Controllers
+require_once __DIR__ . '/../app/controllers/AiController.php';
 require_once __DIR__ . '/../app/controllers/AuthController.php';
 require_once __DIR__ . '/../app/controllers/DashboardController.php';
 require_once __DIR__ . '/../app/controllers/TransactionController.php';
@@ -94,6 +95,9 @@ $router->get('/profile',                  [ProfileController::class, 'index']);
 $router->post('/profile/update-info',     [ProfileController::class, 'updateInfo']);
 $router->post('/profile/update-password', [ProfileController::class, 'updatePassword']);
 $router->post('/profile/request-deletion',[ProfileController::class, 'requestDeletion']);
+
+// ── AI Chat (utilisateurs uniquement) ────────────────────────────────────────
+$router->post('/api/chat', [AiController::class, 'chat']);
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 $router->get('/admin',                       [AdminController::class, 'index']);

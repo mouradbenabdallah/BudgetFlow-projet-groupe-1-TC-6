@@ -28,6 +28,11 @@ return [
         'user' => getenv('DB_USER') ?: 'budgetflow',
         'password' => getenv('DB_PASSWORD') ?: 'budgetflow',
     ],
+    'ollama' => [
+        // Ollama tourne dans le service Docker "ollama" — ne pas utiliser localhost ici.
+        'host'  => getenv('OLLAMA_HOST') ?: 'http://ollama:11434',
+        'model' => getenv('OLLAMA_MODEL') ?: 'llama3.2:1b',
+    ],
     'mail' => [
         // Gmail SMTP : STARTTLS port 587.
         // MAIL_PASSWORD doit être un "mot de passe d'application" Gmail (pas votre mot de passe Google).

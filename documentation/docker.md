@@ -1,38 +1,35 @@
-# Docker setup for BudgetFlow
+# Docker — BudgetFlow
 
-This project uses Docker Compose to run the application with 3 containers:
+Ce document explique comment les 4 services Docker de BudgetFlow ont été créés, comment ils fonctionnent ensemble, et toutes les commandes importantes pour les gérer.
 
-- `nginx`: the web server that receives browser requests
-- `php`: the PHP-FPM container that executes the PHP code
-- `postgres`: the PostgreSQL database container that stores the data
+---
 
-The goal is to separate the responsibilities. Nginx handles HTTP traffic, PHP runs the application logic, and PostgreSQL stores users and application data.
+## Les 4 services
 
-## 1. Project structure
-
-The Docker files used by the project are:
-
-```text
-budgetflow/
-├── docker-compose.yml
-├── docker/
-│   ├── nginx.conf
-│   └── php.Dockerfile
-├── database/
-│   └── schema.sql
-├── public/
-│   └── index.php
-└── config/
-    └── config.php
+```
+nginx      → serveur web, reçoit http://localhost:8000
+php        → exécute le code PHP (PHP-FPM 8.3)
+postgres   → base de données PostgreSQL 16
+ollama     → moteur IA local (modèle llama3.2:1b)
 ```
 
-## 2. Container 1: PHP
+Tous les services sont connectés via le réseau Docker interne `budgetflow`.  
+Ils se parlent par leur **nom de service** (ex: `php:9000`, `postgres:5432`, `ollama:11434`).
 
-The PHP container is created from `docker/php.Dockerfile`.
+---
+
+## Comment chaque service a été créé
+
+### 1. PHP (`budgetflow_php`)
+
+Le service PHP a été créé avec un **Dockerfile custom** (`docker/php.Dockerfile`) car on avait besoin d'installer l'extension PostgreSQL pour PHP.
+
+**`docker/php.Dockerfile` :**
 
 ```dockerfile
 FROM php:8.3-fpm-alpine
 
+# Installe le driver PostgreSQL pour PHP (PDO)
 RUN apk add --no-cache postgresql-dev \
     && docker-php-ext-install pdo pdo_pgsql
 
@@ -40,24 +37,78 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html
 
+# Donne les droits d'écriture au processus PHP-FPM
 RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 9000
 ```
 
-What this does:
+**Pourquoi :**
+- `php:8.3-fpm-alpine` = PHP 8.3 avec PHP-FPM (pas Apache), image légère Alpine Linux
+- `pdo` + `pdo_pgsql` = permet à PHP de se connecter à PostgreSQL
+- `EXPOSE 9000` = PHP-FPM écoute sur le port 9000 (utilisé par Nginx)
+- Le navigateur ne parle jamais directement à PHP — c'est Nginx qui fait le relais
 
-- `php:8.3-fpm-alpine` gives us PHP-FPM, not Apache.
-- `pdo` and `pdo_pgsql` allow PHP to connect to PostgreSQL.
-- `WORKDIR /var/www/html` sets the application folder inside the container.
-- `COPY . /var/www/html` copies the project into the container image.
-- `EXPOSE 9000` means PHP-FPM listens on port `9000`.
+**Dans `docker-compose.yml` :**
 
-Important: the browser does not talk directly to PHP. Nginx sends PHP requests to this container using `php:9000`.
+```yaml
+php:
+  build:
+    context: .
+    dockerfile: docker/php.Dockerfile
+  container_name: budgetflow_php
+  restart: unless-stopped
+  environment:
+    DB_HOST: postgres       # ← nom du service, pas localhost
+    DB_PORT: 5432
+    DB_NAME: budgetflow
+    DB_USER: budgetflow
+    DB_PASSWORD: budgetflow
+    MAIL_HOST: smtp.gmail.com
+    MAIL_PORT: 587
+    MAIL_USERNAME: mouradabdallah581@gmail.com
+    MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  volumes:
+    - .:/var/www/html       # ← le code local est monté dans le conteneur
+  depends_on:
+    - postgres
+  networks:
+    - budgetflow
+```
 
-## 3. Container 2: Nginx
+---
 
-The Nginx container uses the official image:
+### 2. Nginx (`budgetflow_nginx`)
+
+Le service Nginx utilise l'image officielle — pas besoin de Dockerfile custom.  
+On lui fournit uniquement un fichier de configuration.
+
+**`docker/nginx.conf` :**
+
+```nginx
+server {
+    listen 80;
+    root /var/www/html/public;   # dossier public/ du projet
+    index index.php;
+
+    location / {
+        # Toutes les URLs (/login, /dashboard...) → public/index.php
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass php:9000;   # ← envoie les .php au service PHP
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    location ~ /\. {
+        deny all;                # bloque .env, .git, etc.
+    }
+}
+```
+
+**Dans `docker-compose.yml` :**
 
 ```yaml
 nginx:
@@ -65,7 +116,7 @@ nginx:
   container_name: budgetflow_nginx
   restart: unless-stopped
   ports:
-    - "8000:80"
+    - "8000:80"               # localhost:8000 → port 80 du conteneur
   volumes:
     - .:/var/www/html
     - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
@@ -75,51 +126,28 @@ nginx:
     - budgetflow
 ```
 
-What this does:
+**Flux d'une requête :**
 
-- `image: nginx:1.25-alpine` downloads an existing Nginx image.
-- `ports: "8000:80"` means:
-  - your computer opens `localhost:8000`
-  - inside the container, Nginx listens on port `80`
-- `volumes: .:/var/www/html` shares the local project files with the container.
-- `./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro` replaces the default Nginx config with our project config.
-- `depends_on: php` starts PHP before Nginx.
-
-The Nginx configuration is in `docker/nginx.conf`.
-
-```nginx
-server {
-    listen 80;
-    server_name _;
-    root /var/www/html/public;
-    index index.php;
-
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-
-    location ~ \.php$ {
-        try_files $fastcgi_script_name =404;
-        include fastcgi_params;
-        fastcgi_pass php:9000;
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        fastcgi_param PATH_INFO $fastcgi_path_info;
-    }
-}
+```
+Navigateur → http://localhost:8000/dashboard
+    ↓
+Nginx (port 80) reçoit la requête
+    ↓
+URL propre → renvoie vers index.php
+    ↓
+fastcgi_pass php:9000 → PHP-FPM exécute le code
+    ↓
+PHP retourne le HTML → Nginx l'envoie au navigateur
 ```
 
-Important lines:
+---
 
-- `root /var/www/html/public;` means the public web folder is `public/`.
-- `try_files $uri $uri/ /index.php?$query_string;` sends clean URLs like `/login` to `public/index.php`.
-- `fastcgi_pass php:9000;` sends PHP execution to the PHP container.
+### 3. PostgreSQL (`budgetflow_postgres`)
 
-The name `php` works because Docker Compose creates internal DNS names from service names.
+Le service PostgreSQL utilise l'image officielle.  
+Le schéma de la base (tables) est créé automatiquement au premier démarrage.
 
-## 4. Container 3: PostgreSQL
-
-The PostgreSQL container is defined in `docker-compose.yml`.
+**Dans `docker-compose.yml` :**
 
 ```yaml
 postgres:
@@ -127,231 +155,273 @@ postgres:
   container_name: budgetflow_postgres
   restart: unless-stopped
   environment:
-    POSTGRES_DB: budgetflow
-    POSTGRES_USER: budgetflow
-    POSTGRES_PASSWORD: budgetflow
+    POSTGRES_DB: budgetflow       # crée la base de données
+    POSTGRES_USER: budgetflow     # crée l'utilisateur
+    POSTGRES_PASSWORD: budgetflow # définit le mot de passe
+  ports:
+    - "5432"                      # accessible depuis l'hôte pour Beekeeper Studio
   volumes:
-    - postgres_data:/var/lib/postgresql/data
+    - postgres_data:/var/lib/postgresql/data          # données persistantes
     - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
   networks:
     - budgetflow
 ```
 
-What this does:
+**Pourquoi le schéma se crée automatiquement :**  
+PostgreSQL exécute tous les fichiers `.sql` placés dans `/docker-entrypoint-initdb.d/` au **premier démarrage** du volume.  
+Donc `schema.sql` crée les tables `users`, `budgets`, `transactions`, `categories`, `budget_members` automatiquement.
 
-- `image: postgres:16-alpine` downloads PostgreSQL 16.
-- `POSTGRES_DB` creates the database named `budgetflow`.
-- `POSTGRES_USER` creates the database user `budgetflow`.
-- `POSTGRES_PASSWORD` sets the password.
-- `postgres_data:/var/lib/postgresql/data` keeps database data even if containers stop.
-- `./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro` runs the SQL schema the first time the database volume is created.
+> **Important :** `DB_HOST: postgres` dans le service PHP — à l'intérieur de Docker, le nom du service `postgres` remplace `localhost`.
 
-PostgreSQL is not exposed to the host machine. Only the PHP container uses it through the internal Docker network.
+---
 
-## 5. How the containers communicate
+### 4. Ollama (`budgetflow_ollama`)
 
-All containers are connected to the same Docker network:
+Le service Ollama utilise l'image officielle `ollama/ollama`.  
+Il fournit une API REST pour utiliser des modèles LLM localement.
+
+**Dans `docker-compose.yml` :**
+
+```yaml
+ollama:
+  image: ollama/ollama:latest
+  container_name: budgetflow_ollama
+  restart: unless-stopped
+  volumes:
+    - ollama_data:/root/.ollama   # conserve les modèles téléchargés
+  ports:
+    - "11434:11434"               # API accessible sur localhost:11434
+  networks:
+    - budgetflow
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+    interval: 30s
+    timeout: 10s
+    retries: 5
+    start_period: 60s
+```
+
+**Après le démarrage, télécharger le modèle :**
+
+```bash
+docker exec budgetflow_ollama ollama pull llama3.2:1b
+```
+
+Le modèle (~1.3 GB) est stocké dans le volume `ollama_data` — il survive aux redémarrages.
+
+**Comment PHP parle à Ollama :**  
+`AiController.php` fait un appel cURL vers `http://ollama:11434/api/chat`  
+(le nom `ollama` est résolu automatiquement par le réseau Docker interne).
+
+---
+
+## Réseau et volumes
 
 ```yaml
 networks:
   budgetflow:
-    driver: bridge
+    driver: bridge    # réseau interne isolé, les conteneurs se voient par nom
+
+volumes:
+  postgres_data:      # données PostgreSQL persistantes
+  ollama_data:        # modèles IA persistants
 ```
 
-Because they are on the same network:
+**Schéma de communication :**
 
-- Nginx can call PHP using `php:9000`.
-- PHP can call PostgreSQL using `postgres:5432`.
-- The browser can only access Nginx through `localhost:8000`.
-
-Request flow:
-
-```text
-Browser
-  |
-  | http://localhost:8000
-  v
-Nginx container
-  |
-  | PHP file request
-  v
-PHP-FPM container
-  |
-  | SQL query
-  v
-PostgreSQL container
+```
+localhost:8000
+      │
+      ▼
+   Nginx ──(php:9000)──► PHP ──(postgres:5432)──► PostgreSQL
+                          │
+                          └──(ollama:11434)──► Ollama
 ```
 
-## 6. Environment variables
+---
 
-The PHP container receives database configuration from `docker-compose.yml`.
+## Toutes les commandes importantes
 
-```yaml
-environment:
-  APP_ENV: local
-  APP_URL: http://localhost:8000
-  APP_TIMEZONE: Africa/Tunis
-  DB_HOST: postgres
-  DB_PORT: 5432
-  DB_NAME: budgetflow
-  DB_USER: budgetflow
-  DB_PASSWORD: budgetflow
-```
+### Démarrage et arrêt
 
-These variables are read in `config/config.php` using `getenv()`.
+```bash
+# Démarrer tous les services (en arrière-plan)
+docker compose up -d
 
-The most important variable is:
-
-```text
-DB_HOST=postgres
-```
-
-Inside Docker, PHP must not use `localhost` for the database. If PHP uses `localhost`, it will search for PostgreSQL inside the PHP container. The correct host is `postgres`, which is the service name of the database container.
-
-## 7. Step-by-step creation
-
-### Step 1: Create the PHP Dockerfile
-
-Create this file:
-
-```text
-docker/php.Dockerfile
-```
-
-Its job is to build the PHP container and install PostgreSQL support for PHP.
-
-### Step 2: Create the Nginx config
-
-Create this file:
-
-```text
-docker/nginx.conf
-```
-
-Its job is to:
-
-- serve files from `public/`
-- redirect all clean URLs to `public/index.php`
-- send PHP files to `php:9000`
-
-### Step 3: Create the Docker Compose file
-
-Create this file:
-
-```text
-docker-compose.yml
-```
-
-Its job is to define and connect the 3 services:
-
-- `php`
-- `nginx`
-- `postgres`
-
-### Step 4: Create the database schema
-
-Create this file:
-
-```text
-database/schema.sql
-```
-
-This file contains the SQL tables. Docker runs it automatically the first time PostgreSQL starts with a new empty volume.
-
-### Step 5: Start the containers
-
-Run:
-
-```sh
+# Démarrer et reconstruire l'image PHP (après modif du Dockerfile)
 docker compose up -d --build
+
+# Arrêter les conteneurs (données conservées)
+docker compose down
+
+# Arrêter et supprimer tous les volumes (remet à zéro la BDD et les modèles IA)
+docker compose down -v
+
+# Redémarrer un seul service
+docker compose restart php
+docker compose restart nginx
 ```
 
-What this command does:
+### État et logs
 
-- builds the PHP image from `docker/php.Dockerfile`
-- downloads Nginx and PostgreSQL images if needed
-- creates the `budgetflow` network
-- creates the `postgres_data` volume
-- starts the 3 containers in the background
+```bash
+# Voir les 4 conteneurs et leur statut
+docker compose ps
 
-### Step 6: Open the application
+# Voir tous les logs en temps réel
+docker compose logs -f
 
-Open:
+# Logs d'un seul service
+docker compose logs -f php
+docker compose logs -f nginx
+docker compose logs -f postgres
+docker compose logs -f ollama
 
-```text
-http://localhost:8000
+# Voir les 50 dernières lignes
+docker compose logs --tail=50 php
 ```
 
-The request goes to Nginx, then Nginx sends PHP work to the PHP container.
+### Accéder aux conteneurs
 
-## 8. Useful Docker commands
+```bash
+# Entrer dans le conteneur PHP (shell)
+docker compose exec php sh
 
-Start containers:
+# Entrer dans le conteneur Nginx
+docker compose exec nginx sh
 
-```sh
+# Accéder à la base PostgreSQL (console SQL)
+docker compose exec postgres psql -U budgetflow -d budgetflow
+
+# Entrer dans le conteneur Ollama
+docker exec -it budgetflow_ollama bash
+```
+
+### Base de données (PostgreSQL)
+
+```bash
+# Ouvrir la console SQL
+docker compose exec postgres psql -U budgetflow -d budgetflow
+
+# Commandes SQL utiles dans la console :
+\dt                          -- lister les tables
+\d users                     -- structure de la table users
+SELECT * FROM users;         -- voir tous les utilisateurs
+\q                           -- quitter
+
+# Lister les utilisateurs en une ligne
+docker compose exec postgres psql -U budgetflow -d budgetflow \
+  -c "SELECT id, name, email, role, is_active FROM users;"
+
+# Réinitialiser complètement la base de données
+docker compose down -v && docker compose up -d --build
+```
+
+### Ollama (IA)
+
+```bash
+# Voir si le conteneur Ollama tourne
+docker ps | grep ollama
+
+# Voir les modèles installés
+docker exec budgetflow_ollama ollama list
+
+# Télécharger le modèle (première fois, ~1.3 GB)
+docker exec budgetflow_ollama ollama pull llama3.2:1b
+
+# Supprimer un modèle
+docker exec budgetflow_ollama ollama rm llama3.2:1b
+
+# Tester le modèle en mode interactif (chat dans le terminal)
+docker exec -it budgetflow_ollama ollama run llama3.2:1b
+
+# Voir les logs Ollama
+docker logs budgetflow_ollama
+docker logs -f budgetflow_ollama
+
+# Tester l'API Ollama depuis le terminal
+curl http://localhost:11434/api/tags
+
+# Tester que PHP peut joindre Ollama (depuis l'intérieur du réseau Docker)
+docker exec budgetflow_php curl -s http://ollama:11434/api/tags
+
+# Envoyer un message test directement à Ollama
+curl -s -X POST http://localhost:11434/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "llama3.2:1b",
+    "messages": [{"role": "user", "content": "Dis bonjour en français."}],
+    "stream": false
+  }' | python3 -c "import sys,json; print(json.load(sys.stdin)['message']['content'])"
+```
+
+### Problème courant : conflit de nom de conteneur
+
+```bash
+# Erreur : "The container name /budgetflow_ollama is already in use"
+# Solution : supprimer l'ancien conteneur manuel, laisser docker compose gérer
+
+docker rm -f budgetflow_ollama
 docker compose up -d
 ```
 
-Start and rebuild:
+### Images et nettoyage
 
-```sh
+```bash
+# Lister les images Docker du projet
+docker images | grep budgetflow
+
+# Supprimer les images inutilisées (libère de l'espace disque)
+docker image prune
+
+# Supprimer tout ce qui n'est pas utilisé (images, conteneurs, volumes orphelins)
+docker system prune
+
+# Voir l'espace utilisé par Docker
+docker system df
+```
+
+---
+
+## Procédure complète — premier lancement
+
+```bash
+# 1. Cloner le projet
+git clone <repo-url>
+cd budgetflow
+
+# 2. Lancer les 4 services
 docker compose up -d --build
-```
 
-Stop containers:
+# 3. Télécharger le modèle IA (une seule fois)
+docker exec budgetflow_ollama ollama pull llama3.2:1b
 
-```sh
-docker compose down
-```
-
-Stop containers and delete database data:
-
-```sh
-docker compose down -v
-```
-
-Warning: `docker compose down -v` deletes the PostgreSQL volume, so the database data will be removed.
-
-Show running containers:
-
-```sh
+# 4. Vérifier que tout tourne
 docker compose ps
+
+# 5. Ouvrir l'application
+# http://localhost:8000
+# Admin : admin@budgetflow.local / password
 ```
 
-Show logs:
+## Procédure — après un redémarrage normal
 
-```sh
-docker compose logs
+```bash
+# Les données sont conservées dans les volumes
+docker compose up -d
+
+# Le modèle IA est encore là — pas besoin de le re-télécharger
+docker exec budgetflow_ollama ollama list
 ```
 
-Show logs for one service:
+## Procédure — reset complet
 
-```sh
-docker compose logs nginx
-docker compose logs php
-docker compose logs postgres
+```bash
+# Supprime les conteneurs ET les volumes (BDD + modèles IA effacés)
+docker compose down -v
+
+# Tout relancer depuis zéro
+docker compose up -d --build
+docker exec budgetflow_ollama ollama pull llama3.2:1b
 ```
-
-Enter the PHP container:
-
-```sh
-docker compose exec php sh
-```
-
-Enter the PostgreSQL database:
-
-```sh
-docker compose exec postgres psql -U budgetflow -d budgetflow
-```
-
-## 9. Summary
-
-BudgetFlow uses 3 containers:
-
-```text
-nginx    -> receives browser requests on localhost:8000
-php      -> runs the PHP application with PHP-FPM
-postgres -> stores the database
-```
-
-They work together through the `budgetflow` Docker network. Nginx talks to PHP using `php:9000`, and PHP talks to PostgreSQL using `postgres:5432`.
+ 

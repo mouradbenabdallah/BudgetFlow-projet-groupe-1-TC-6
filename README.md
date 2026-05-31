@@ -20,6 +20,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com)
 [![Nginx](https://img.shields.io/badge/Nginx-Alpine-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org)
+[![Ollama](https://img.shields.io/badge/Ollama-llama3.2:1b-6C63FF?style=for-the-badge)](https://ollama.com)
 
 <br/>
 
@@ -41,6 +42,7 @@
 
 - [🎯 Présentation du projet](#-présentation-du-projet)
 - [✨ Fonctionnalités](#-fonctionnalités)
+- [🤖 Assistant IA](#-assistant-ia)
 - [🏗️ Architecture](#️-architecture)
 - [🗄️ Base de données](#️-base-de-données)
 - [🚀 Lancement rapide](#-lancement-rapide)
@@ -155,23 +157,62 @@ Année          : 2025 – 2026
 
 ---
 
+## 🤖 Assistant IA
+
+BudgetFlow intègre un **assistant financier conversationnel** alimenté par un modèle LLM local via **Ollama** — aucune donnée ne quitte le serveur.
+
+<details>
+<summary><b>Voir les détails de l'intégration IA</b></summary>
+
+<br/>
+
+- Bouton flottant animé sur toutes les pages utilisateur (absent sur admin)
+- Modal Bootstrap dark avec interface de chat
+- L'IA connaît le solde, les dépenses et les budgets de l'utilisateur
+- Historique de conversation conservé côté client uniquement
+- Modèle : `llama3.2:1b` — tourne entièrement dans Docker (CPU)
+
+**Démarrage :**
+
+```bash
+# Démarrer Ollama
+docker compose up -d ollama
+
+# Télécharger le modèle (une seule fois, ~1.3 GB)
+docker exec budgetflow_ollama ollama pull llama3.2:1b
+
+# Trouver Ollama dans Docker
+docker ps | grep ollama
+docker logs budgetflow_ollama
+docker exec budgetflow_ollama ollama list
+
+# Tester l'API directement
+curl http://localhost:11434/api/tags
+```
+
+Documentation complète : [`documentation/ai.md`](documentation/ai.md)
+
+</details>
+
+---
+
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      Navigateur Client                       │
-│                   HTML + Bootstrap 5 + JS                    │
-└────────────────────────┬────────────────────────────────────┘
-                         │ HTTP
-┌────────────────────────▼────────────────────────────────────┐
-│                    Docker Network                            │
-│  ┌─────────────┐   ┌─────────────┐   ┌──────────────────┐  │
-│  │    Nginx    │──▶│  PHP 8.3    │──▶│  PostgreSQL 16   │  │
-│  │   Alpine    │   │    FPM      │   │                  │  │
-│  │  Port 8000  │   │ Architecture│   │   5 tables       │  │
-│  │             │   │    MVC      │   │   propres        │  │
-│  └─────────────┘   └─────────────┘   └──────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                        Navigateur Client                          │
+│                     HTML + Bootstrap 5 + JS                       │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │ HTTP
+┌───────────────────────────▼──────────────────────────────────────┐
+│                       Docker Network                              │
+│  ┌──────────┐   ┌──────────────┐   ┌─────────────┐  ┌────────┐  │
+│  │  Nginx   │──▶│  PHP 8.3 FPM│──▶│ PostgreSQL  │  │ Ollama │  │
+│  │  :8000   │   │  MVC natif  │   │  16 Alpine  │  │  :11434│  │
+│  └──────────┘   └──────┬───────┘   └─────────────┘  └────┬───┘  │
+│                         └──────────────────────────────────┘      │
+│                              ollama:11434 (AI chat)                │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ### 📁 Structure du projet
@@ -321,7 +362,7 @@ docker compose up -d --build
 ### Commandes utiles
 
 ```bash
-# Voir les conteneurs
+# Voir les conteneurs (nginx, php, postgres, ollama)
 docker compose ps
 
 # Voir les logs
@@ -333,9 +374,21 @@ docker compose down -v && docker compose up -d --build
 # Accéder à PostgreSQL
 docker compose exec postgres psql -U budgetflow -d budgetflow
 
-# Lister les utilisateurs
-docker compose exec postgres psql -U budgetflow -d budgetflow \
-  -c "SELECT id, email, role, is_active FROM users;"
+# ── Ollama / IA ──────────────────────────────────────────────────
+# Trouver le conteneur Ollama
+docker ps | grep ollama
+
+# Voir les modèles installés
+docker exec budgetflow_ollama ollama list
+
+# Télécharger le modèle IA (première fois)
+docker exec budgetflow_ollama ollama pull llama3.2:1b
+
+# Tester l'API Ollama
+curl http://localhost:11434/api/tags
+
+# Voir les logs Ollama
+docker logs budgetflow_ollama
 ```
 
 ---
@@ -397,16 +450,17 @@ BudgetFlow envoie des emails automatiques via **PHPMailer + Resend SMTP** pour :
 
 ## 🛠️ Stack technique
 
-| Couche               | Technologie             | Version |
-| -------------------- | ----------------------- | ------- |
-| **Frontend**         | HTML5 + Bootstrap       | 5.3.2   |
-| **JavaScript**       | Vanilla JS + Chart.js   | ES6+    |
-| **Backend**          | PHP natif (MVC maison)  | 8.3     |
-| **Base de données**  | PostgreSQL              | 16      |
-| **Serveur web**      | Nginx                   | Alpine  |
-| **Conteneurisation** | Docker + Compose        | v2      |
-| **Emails**           | PHPMailer + google mail | —       |
-| **Architecture**     | MVC sans framework      | —       |
+| Couche               | Technologie              | Version      |
+| -------------------- | ------------------------ | ------------ |
+| **Frontend**         | HTML5 + Bootstrap        | 5.3.3        |
+| **JavaScript**       | Vanilla JS + Chart.js    | ES6+         |
+| **Backend**          | PHP natif (MVC maison)   | 8.3          |
+| **Base de données**  | PostgreSQL               | 16           |
+| **Serveur web**      | Nginx                    | Alpine       |
+| **Conteneurisation** | Docker + Compose         | v2           |
+| **Emails**           | SMTP natif Gmail         | STARTTLS 587 |
+| **Intelligence IA**  | Ollama + llama3.2:1b     | local Docker |
+| **Architecture**     | MVC sans framework       | —            |
 
 ---
 

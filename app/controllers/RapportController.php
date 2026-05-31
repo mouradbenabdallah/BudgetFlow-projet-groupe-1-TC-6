@@ -30,7 +30,7 @@ class RapportController
 
         if ($type === 'mensuel') {
             $mois = $_POST['mois'] ?? date('Y-m');
-            if (!preg_match('/^\d{4}-\d{2}$/', $mois)) {
+            if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $mois)) {
                 $mois = date('Y-m');
             }
             $startDate = $mois . '-01';

@@ -4,8 +4,22 @@ declare(strict_types=1);
 
 /**
  * Contrôleur Administration.
- * Supervise les utilisateurs, les rôles et les budgets partagés.
- * Toutes les méthodes exigent le rôle 'admin'.
+ *
+ * Supervise les utilisateurs, les rôles, les budgets partagés et la communication.
+ * Toutes les méthodes exigent le rôle 'admin' via Auth::requireRole().
+ *
+ * Routes déclarées dans public/index.php :
+ *   GET  /admin                    → index()
+ *   POST /admin/test-email         → testEmail()
+ *   GET  /admin/users              → users()
+ *   GET  /admin/users/export       → exportUsers()
+ *   POST /admin/users/validate     → validateUser()
+ *   POST /admin/users/role         → changeRole()
+ *   POST /admin/users/delete       → deleteUser()
+ *   POST /admin/users/reset-password → resetPassword()
+ *   GET  /admin/budgets            → budgets()
+ *   GET  /admin/send-email         → showSendEmail()
+ *   POST /admin/send-email         → sendBulkEmail()
  */
 class AdminController
 {
@@ -361,6 +375,46 @@ class AdminController
         $safeName = htmlspecialchars((string) $user['name'], ENT_QUOTES, 'UTF-8');
         $this->session->setFlash('success', "Mot de passe de {$safeName} réinitialisé → <strong>{$tempPass}</strong> (à communiquer à l'utilisateur)");
         $this->redirect('/admin/users');
+    }
+
+    /** Affiche le profil de l'administrateur connecté (même vue que l'utilisateur). */
+    public function profile(): void
+    {
+        Auth::requireRole('admin');
+
+        $userId = (int) (Auth::getUser()['id'] ?? 0);
+        $user   = $this->userModel->findById($userId) ?? [];
+        $tab    = in_array($_GET['tab'] ?? '', ['profile', 'security'], true)
+                  ? ($_GET['tab'] ?? 'profile') : 'profile';
+
+        $pdo = Database::getInstance();
+
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM transactions WHERE user_id = :id");
+        $stmt->execute(['id' => $userId]);
+        $txCount = (int) $stmt->fetchColumn();
+
+        $stmt = $pdo->prepare(
+            "SELECT COALESCE(SUM(CASE WHEN type='income' THEN amount ELSE -amount END), 0)
+             FROM transactions WHERE user_id = :id"
+        );
+        $stmt->execute(['id' => $userId]);
+        $netBalance = (float) $stmt->fetchColumn();
+
+        $rawPrefs = $user['preferences'] ?? '{}';
+        $prefs    = json_decode((string) $rawPrefs, true) ?: [];
+
+        $this->render('profile/index', [
+            'pageTitle'    => 'Mon Profil',
+            'user'         => $user,
+            'tab'          => $tab,
+            'txCount'      => $txCount,
+            'netBalance'   => $netBalance,
+            'prefs'        => $prefs,
+            'profileBase'  => '/admin/profile',
+            'flashSuccess' => $this->session->getFlash('success'),
+            'flashDanger'  => $this->session->getFlash('danger'),
+            'flashInfo'    => $this->session->getFlash('info'),
+        ]);
     }
 
     /** Affiche le formulaire de composition d'email. */

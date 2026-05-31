@@ -1,4 +1,13 @@
 <?php
+/**
+ * Vue — Composition et envoi d'un email groupé.
+ *
+ * Reçoit de AdminController::showSendEmail() :
+ *   $allUsers  — liste de tous les utilisateurs (id, name, email, is_active)
+ *   $flashSuccess / $flashDanger / $flashInfo — messages flash
+ *
+ * Poste vers POST /admin/send-email → AdminController::sendBulkEmail().
+ */
 $e = static fn (mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 $allUsers = $allUsers ?? [];
 ?>

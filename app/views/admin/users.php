@@ -1,5 +1,17 @@
 <?php
-// Gestion des utilisateurs — design Figma (tableau avec badges rôle/statut, recherche live).
+/**
+ * Vue Admin — Gestion des utilisateurs.
+ *
+ * Reçoit de AdminController::users() :
+ *   $users        — page courante d'utilisateurs (avec budget_count, transaction_count)
+ *   $filter       — filtre actif : 'all' | 'pending' | 'active' | 'admin'
+ *   $page         — numéro de page courante
+ *   $totalPages   — nombre total de pages
+ *   $totalCount   — nombre total d'utilisateurs (filtre appliqué)
+ *   $pendingCount — nombre de comptes en attente (pour le badge)
+ *   $currentUser  — données de l'admin connecté
+ *   $flash*       — messages flash success / danger / info
+ */
 $e          = static fn (mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 $currentUid = (int) ($currentUser['id'] ?? 0);
 $filters = [
@@ -128,7 +140,7 @@ $filters = [
                         <!-- Rôle -->
                         <td class="adm-td">
                             <?php if ($isAdmin): ?>
-                                <span class="adm-badge-role-admin">👑 Admin</span>
+                                <span class="adm-badge-role-admin"><i class="bi bi-shield-fill" style="margin-right:4px;"></i>Admin</span>
                             <?php else: ?>
                                 <span class="adm-badge-role-user">User</span>
                             <?php endif; ?>

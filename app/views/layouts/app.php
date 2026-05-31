@@ -32,23 +32,31 @@ $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'),
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="/style.css?v=7" rel="stylesheet">
+    <!-- Anti-FOUC : applique le thème avant le rendu pour éviter le flash -->
+    <script>(function(){var t=localStorage.getItem('bf-theme')||'light';document.documentElement.dataset.theme=t;}());</script>
+    <link href="/style.css?v=10" rel="stylesheet">
     <link rel="icon" href="/img/favicon-budget.png" type="image/png">
     <link rel="icon" href="/img/favicon-budget.ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
-    <script src="/script.js"></script>
+    <script src="/script.js?v=3"></script>
 </head>
 <body class="bf-page-app">
     <div class="bf-app-shell">
         <?php require __DIR__ . '/../partials/sidebar.php'; ?>
+        <div class="bf-sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
 
         <main class="bf-main">
             <header class="bf-topbar">
-                <div>
+                <div class="bf-topbar-lead">
+                    <button class="bf-menu-toggle" id="sidebar-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">
+                        <i class="bi bi-list" aria-hidden="true"></i>
+                    </button>
+                    <div>
                     <h1 class="bf-page-title"><?= $safePageTitle ?></h1>
                     <?php
                     $subtitleMap = [
-                        'Tableau de bord' => 'Bon retour, ' . $safeUserName . ' 👋',
+                        'Profil'          => 'Gérez vos informations personnelles et préférences',
+                        'Tableau de bord' => 'Bon retour, ' . $safeUserName,
                         'Transactions'    => 'Suivez et gérez votre activité financière',
                         'Mes Budgets'     => 'Définissez des limites et suivez vos dépenses',
                         'Catégories'      => 'Organisez vos transactions avec des catégories personnalisées',
@@ -56,11 +64,12 @@ $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'),
                         'Modifier le budget' => 'Modifiez les paramètres de votre budget',
                         'Profil'          => 'Gérez vos informations personnelles',
                         'Paramètres'      => 'Configurez votre compte BudgetFlow',
-                        'Notifications'   => 'Vos alertes et notifications',
+
                     ];
-                    $topbarSubtitle = $subtitleMap[$pageTitleText] ?? ('Bon retour, ' . $safeUserName . ' 👋');
+                    $topbarSubtitle = $subtitleMap[$pageTitleText] ?? ('Bon retour, ' . $safeUserName);
                     ?>
                     <p class="bf-page-subtitle"><?= htmlspecialchars($topbarSubtitle, ENT_QUOTES, 'UTF-8') ?></p>
+                    </div>
                 </div>
 
                 <div class="bf-topbar-actions">
@@ -70,9 +79,8 @@ $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'),
                         <input id="bf-search-input" type="search" name="q" placeholder="Search..." autocomplete="off">
                     </form>
 
-                    <button class="bf-icon-button" type="button" aria-label="Notifications">
-                        <i class="bi bi-bell" aria-hidden="true"></i>
-                        <span class="bf-notification-dot" aria-hidden="true"></span>
+                    <button class="bf-theme-toggle" id="theme-toggle" type="button" title="Mode sombre">
+                        <i class="bi bi-moon-fill" id="theme-icon"></i>
                     </button>
 
                     <span class="bf-top-avatar" aria-label="Utilisateur connecté"><?= $safeInitials ?></span>
@@ -94,5 +102,6 @@ $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'),
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <?= $scripts ?? '' ?>
+    <?php require_once __DIR__ . '/../partials/ai-assistant.php'; ?>
 </body>
 </html>

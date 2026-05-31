@@ -1,4 +1,13 @@
 <?php
+/**
+ * Template email — Message personnalisé de l'administrateur.
+ *
+ * Variables attendues (injectées par AdminController::sendBulkEmail()) :
+ *   string $subject      — sujet de l'email
+ *   string $userName     — prénom/nom du destinataire
+ *   string $messageBody  — corps en texte brut (les \n sont convertis en <p>)
+ *   string $loginUrl     — URL de connexion
+ */
 $emailTitle = htmlspecialchars($subject ?? 'Message de l\'administration', ENT_QUOTES, 'UTF-8');
 $e = static fn (mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 require __DIR__ . '/partials/top.php';

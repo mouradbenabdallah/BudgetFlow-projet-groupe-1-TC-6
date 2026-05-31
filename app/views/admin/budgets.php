@@ -1,5 +1,12 @@
 <?php
-// Supervision des budgets partagés — design Figma.
+/**
+ * Vue Admin — Supervision des budgets partagés.
+ *
+ * Reçoit de AdminController::budgets() :
+ *   $budgets       — tous les budgets de type "shared" avec agrégats (total_spent, member_count…)
+ *   $flashSuccess  — message de succès éventuel
+ *   $flashDanger   — message d'erreur éventuel
+ */
 $e = static fn (mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 ?>
 
@@ -61,13 +68,13 @@ $e = static fn (mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES, '
                             $statusLabel = 'Sans limite';
                             $statusCls   = 'adm-badge-role-user';
                         } elseif ($pct >= 100) {
-                            $statusLabel = '🚨 Dépassé';
+                            $statusLabel = '<i class="bi bi-exclamation-octagon-fill" style="margin-right:4px;"></i>Dépassé';
                             $statusCls   = 'adm-badge-inactive';
                         } elseif ($pct >= 80) {
-                            $statusLabel = '⚡ Proche';
+                            $statusLabel = '<i class="bi bi-exclamation-triangle-fill" style="margin-right:4px;"></i>Proche';
                             $statusCls   = 'adm-badge-pending';
                         } else {
-                            $statusLabel = '✓ Maîtrisé';
+                            $statusLabel = '<i class="bi bi-check2" style="margin-right:4px;"></i>Maîtrisé';
                             $statusCls   = 'adm-badge-active';
                         }
                     ?>

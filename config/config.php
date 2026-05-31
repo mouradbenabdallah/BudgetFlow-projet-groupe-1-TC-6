@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * Application configuration.
+ *
+ * All sensitive values are read from environment variables (set in docker-compose.yml).
+ * Hard-coded fallbacks are safe defaults for local development only.
+ *
+ * Keys:
+ *   app      — name, environment, public URL, timezone
+ *   database — PostgreSQL connection (host must be "postgres" inside Docker)
+ *   mail     — Gmail SMTP via STARTTLS on port 587;
+ *              MAIL_PASSWORD must be a Gmail App Password, not your account password
+ */
 return [
     'app' => [
         'name' => 'BudgetFlow',
@@ -15,6 +27,11 @@ return [
         'name' => getenv('DB_NAME') ?: 'budgetflow',
         'user' => getenv('DB_USER') ?: 'budgetflow',
         'password' => getenv('DB_PASSWORD') ?: 'budgetflow',
+    ],
+    'ollama' => [
+        // Ollama tourne dans le service Docker "ollama" — ne pas utiliser localhost ici.
+        'host'  => getenv('OLLAMA_HOST') ?: 'http://ollama:11434',
+        'model' => getenv('OLLAMA_MODEL') ?: 'llama3.2:1b',
     ],
     'mail' => [
         // Gmail SMTP : STARTTLS port 587.

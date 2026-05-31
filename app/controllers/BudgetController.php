@@ -19,7 +19,6 @@ declare(strict_types=1);
 class BudgetController
 {
     private ?Budget $budgets = null;
-    private ?Transaction $transactions = null;
     private Session $session;
 
     /**
@@ -735,17 +734,4 @@ class BudgetController
         return $this->budgets;
     }
 
-    /**
-     * Lazy-load the Transaction model instance.
-     *
-     * @return Transaction
-     */
-    private function transactions(): Transaction
-    {
-        if ($this->transactions === null) {
-            $this->transactions = new Transaction();
-        }
-
-        return $this->transactions;
-    }
 }

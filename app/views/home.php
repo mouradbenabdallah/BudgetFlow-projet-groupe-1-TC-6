@@ -117,7 +117,7 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
                 <div class="bf-stat"><strong>2k+</strong><span>Utilisateurs Actifs</span></div>
                 <div class="bf-stat"><strong>3.6M TND</strong><span>Budgets Gérés</span></div>
                 <div class="bf-stat"><strong>99.9%</strong><span>Disponibilité SLA</span></div>
-                <div class="bf-stat"><strong>4.9★</strong><span>Note Moyenne</span></div>
+                <div class="bf-stat"><strong>4.9 <i class="bi bi-star-fill" style="color:#f59e0b;font-size:.85em;"></i></strong><span>Note Moyenne</span></div>
             </div>
         </section>
 
@@ -210,21 +210,27 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
 
                 <div class="testimonials-grid">
                     <article class="testimonial-card">
-                        <div class="stars">★★★★★</div>
+                        <div class="stars">
+                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                        </div>
                         <p>"BudgetFlow a complètement changé ma façon de gérer mon argent. La fonction de budgets
                             partagés est révolutionnaire."</p>
                         <h4>Sarah Chen</h4>
                         <span>Designer Produit chez Stripe</span>
                     </article>
                     <article class="testimonial-card">
-                        <div class="stars">★★★★★</div>
+                        <div class="stars">
+                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                        </div>
                         <p>"Les analyses sont incroyablement détaillées. Je comprends enfin où va mon argent chaque
                             mois."</p>
                         <h4>Marcus Rivera</h4>
                         <span>Ingénieur Logiciel chez Google</span>
                     </article>
                     <article class="testimonial-card">
-                        <div class="stars">★★★★★</div>
+                        <div class="stars">
+                            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                        </div>
                         <p>"Gérer des revenus irréguliers était stressant. BudgetFlow le rend simple avec des
                             ajustements intelligents."</p>
                         <h4>Emma Thompson</h4>

@@ -1,5 +1,14 @@
 <?php
-// Tableau de bord admin — design fidèle au Figma (onglets Overview / Analytiques).
+/**
+ * Vue Admin — Tableau de bord (onglets Overview et Analytiques).
+ *
+ * Reçoit de AdminController::index() :
+ *   $stats  — tableau contenant : total_users, pending_users, total_budgets, shared_budgets,
+ *             total_transactions, total_volume, registrations_chart, pending_list,
+ *             monthly_users, monthly_tx, recent_activity
+ *   $mailFrom      — adresse expéditeur SMTP configurée
+ *   $flash*        — messages flash success / danger / info
+ */
 $e   = static fn (mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 $tab = in_array($_GET['tab'] ?? '', ['analytics'], true) ? ($_GET['tab'] ?? 'overview') : 'overview';
 
@@ -238,16 +247,18 @@ $chartIncome      = array_column($stats['monthly_tx'] ?? [], 'income');
 <div class="row g-4 mb-5">
     <?php
     $aCards = [
-        ['label' => 'Volume Total', 'value' => number_format((float) $stats['total_volume'], 0, ',', ' ') . ' DT', 'change' => '', 'icon' => '💰'],
-        ['label' => 'Total Transactions', 'value' => number_format($stats['total_transactions'], 0, ',', ' '), 'change' => '', 'icon' => '📊'],
-        ['label' => 'Budgets Partagés', 'value' => $stats['shared_budgets'], 'change' => '/ ' . $stats['total_budgets'] . ' total', 'icon' => '🤝'],
-        ['label' => 'Utilisateurs', 'value' => $stats['total_users'], 'change' => $stats['pending_users'] . ' en attente', 'icon' => '👥'],
+        ['label' => 'Volume Total',      'value' => number_format((float) $stats['total_volume'], 0, ',', ' ') . ' DT', 'change' => '', 'icon' => 'bi-currency-dollar', 'color' => '#a855f7'],
+        ['label' => 'Total Transactions','value' => number_format($stats['total_transactions'], 0, ',', ' '),             'change' => '', 'icon' => 'bi-arrow-left-right', 'color' => '#006cfa'],
+        ['label' => 'Budgets Partagés',  'value' => $stats['shared_budgets'],  'change' => '/ ' . $stats['total_budgets'] . ' total', 'icon' => 'bi-wallet2',      'color' => '#00684a'],
+        ['label' => 'Utilisateurs',      'value' => $stats['total_users'],     'change' => $stats['pending_users'] . ' en attente',    'icon' => 'bi-people',       'color' => '#f59e0b'],
     ];
     foreach ($aCards as $c): ?>
     <div class="col-6 col-xl-3">
         <div class="adm-kpi">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                <span style="font-size:22px;"><?= $c['icon'] ?></span>
+                <div class="adm-kpi-icon" style="background:<?= $e($c['color']) ?>18;border:1px solid <?= $e($c['color']) ?>30;">
+                    <i class="bi <?= $e($c['icon']) ?>" style="font-size:18px;color:<?= $e($c['color']) ?>;"></i>
+                </div>
                 <?php if ($c['change']): ?>
                 <span style="font-size:12px;font-weight:600;color:#00684a;"><?= $e($c['change']) ?></span>
                 <?php endif; ?>

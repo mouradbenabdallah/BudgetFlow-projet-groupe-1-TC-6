@@ -1,6 +1,76 @@
+// ── Thème dark/light — appliqué immédiatement pour éviter le flash ──
+(function () {
+  var saved = localStorage.getItem("bf-theme") || "light";
+  document.documentElement.dataset.theme = saved;
+})();
+
 // JavaScript global BudgetFlow.
 (function () {
   "use strict";
+
+  // ── Toggle dark / light mode ──
+  function applyThemeIcon(theme) {
+    var icon = document.getElementById("theme-icon");
+    if (!icon) return;
+    icon.className = theme === "dark" ? "bi bi-sun-fill" : "bi bi-moon-fill";
+    var btn = document.getElementById("theme-toggle");
+    if (btn) btn.title = theme === "dark" ? "Mode clair" : "Mode sombre";
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    applyThemeIcon(document.documentElement.dataset.theme || "light");
+
+    var btn = document.getElementById("theme-toggle");
+    if (btn) {
+      btn.addEventListener("click", function () {
+        var current = document.documentElement.dataset.theme || "light";
+        var next = current === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem("bf-theme", next);
+        applyThemeIcon(next);
+      });
+    }
+
+    // ── Sidebar mobile (hamburger) ──
+    var menuToggle = document.getElementById("sidebar-toggle");
+    var backdrop = document.getElementById("sidebar-backdrop");
+    var sidebar = document.querySelector(".bf-sidebar, .adm-sidebar");
+
+    function setSidebar(open) {
+      document.body.classList.toggle("bf-sidebar-open", open);
+      if (menuToggle) menuToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
+    if (menuToggle && sidebar) {
+      menuToggle.addEventListener("click", function () {
+        setSidebar(!document.body.classList.contains("bf-sidebar-open"));
+      });
+    }
+    if (backdrop) {
+      backdrop.addEventListener("click", function () {
+        setSidebar(false);
+      });
+    }
+    // Ferme la sidebar après un clic sur un lien (navigation mobile)
+    if (sidebar) {
+      sidebar.addEventListener("click", function (event) {
+        if (event.target.closest("a")) setSidebar(false);
+      });
+    }
+    // Échap ferme la sidebar
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") setSidebar(false);
+    });
+
+    // Fermeture alerte budget
+    var alertClose = document.querySelector(".bf-dashboard-alert-close");
+    if (alertClose) {
+      alertClose.addEventListener("click", function () {
+        var alert = alertClose.closest(".bf-dashboard-alert");
+        if (alert) alert.style.display = "none";
+      });
+    }
+  });
 
   document
     .querySelectorAll("[data-password-toggle]")

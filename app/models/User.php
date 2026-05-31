@@ -70,7 +70,7 @@ class User
     public function findById(int $id): ?array
     {
         $statement = $this->pdo->prepare(
-            'SELECT id, name, email, role, is_active, created_at
+            'SELECT id, name, email, role, is_active, phone, preferences, last_login_at, created_at
              FROM users
              WHERE id = :id
              LIMIT 1'
@@ -79,6 +79,55 @@ class User
         $user = $statement->fetch();
 
         return $user ?: null;
+    }
+
+    /**
+     * Met à jour le profil visible (nom, email, téléphone) d'un utilisateur.
+     *
+     * @param int         $id    User ID
+     * @param string      $name  Nouveau nom
+     * @param string      $email Nouvel email
+     * @param string|null $phone Numéro de téléphone (null pour effacer)
+     */
+    public function updateProfile(int $id, string $name, string $email, ?string $phone): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE users SET name = :name, email = :email, phone = :phone WHERE id = :id'
+        );
+        $stmt->bindValue(':id',    $id,    PDO::PARAM_INT);
+        $stmt->bindValue(':name',  $name,  PDO::PARAM_STR);
+        $stmt->bindValue(':email', $email, PDO::PARAM_STR);
+        $stmt->bindValue(':phone', $phone, $phone !== null ? PDO::PARAM_STR : PDO::PARAM_NULL);
+
+        return $stmt->execute();
+    }
+
+    /**
+     * Sauvegarde les préférences (JSON) d'un utilisateur.
+     *
+     * @param int    $id    User ID
+     * @param string $prefs JSON encodé
+     */
+    public function updatePreferences(int $id, string $prefs): bool
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET preferences = :prefs WHERE id = :id');
+        $stmt->bindValue(':id',    $id,    PDO::PARAM_INT);
+        $stmt->bindValue(':prefs', $prefs, PDO::PARAM_STR);
+
+        return $stmt->execute();
+    }
+
+    /**
+     * Enregistre l'horodatage de la dernière connexion.
+     *
+     * @param int $id User ID
+     */
+    public function touchLastLogin(int $id): bool
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET last_login_at = NOW() WHERE id = :id');
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+
+        return $stmt->execute();
     }
 
     /**
@@ -221,6 +270,50 @@ class User
         $statement->bindValue(':id', $id, PDO::PARAM_INT);
 
         return $statement->execute();
+    }
+
+    /**
+     * Retourne tous les administrateurs actifs (pour les emails d'alerte).
+     *
+     * @return array<array<string, mixed>>
+     */
+    public function findAllAdmins(): array
+    {
+        $stmt = $this->pdo->query(
+            "SELECT id, name, email FROM users WHERE role = 'admin' AND is_active = true"
+        );
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Retourne les statistiques personnelles d'un utilisateur.
+     *
+     * @param int $userId
+     * @return array{budgets_count:int, transactions_count:int, total_spent:float, member_since:string|null}
+     */
+    public function getStats(int $userId): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT
+                COUNT(DISTINCT b.id)  AS budgets_count,
+                COUNT(DISTINCT t.id)  AS transactions_count,
+                COALESCE(SUM(CASE WHEN t.type = 'expense' THEN t.amount ELSE 0 END), 0) AS total_spent,
+                u.created_at          AS member_since
+             FROM users u
+             LEFT JOIN budgets      b ON b.owner_id = u.id
+             LEFT JOIN transactions t ON t.user_id  = u.id
+             WHERE u.id = :id
+             GROUP BY u.created_at"
+        );
+        $stmt->execute(['id' => $userId]);
+        $row = $stmt->fetch();
+
+        return $row ?: [
+            'budgets_count'      => 0,
+            'transactions_count' => 0,
+            'total_spent'        => 0.0,
+            'member_since'       => null,
+        ];
     }
 
     /**

@@ -50,6 +50,25 @@ services:
     networks:
       - budgetflow
 
+  ollama:
+    # Service IA locale : exécute les modèles LLM via l'API REST Ollama.
+    image: ollama/ollama:latest
+    container_name: budgetflow_ollama
+    restart: unless-stopped
+    volumes:
+      # Volume persistant : conserve les modèles téléchargés entre les redémarrages.
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - budgetflow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   postgres:
     # Base PostgreSQL 16. Le port 5432 est exposé pour Beekeeper et autres outils.
     image: postgres:16-alpine
@@ -82,3 +101,4 @@ networks:
 
 volumes:
   postgres_data:
+  ollama_data:

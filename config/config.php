@@ -17,12 +17,14 @@ return [
         'password' => getenv('DB_PASSWORD') ?: 'budgetflow',
     ],
     'mail' => [
-        // Prévu pour PHPMailer + Resend plus tard. Fonction 1 ne l'utilise pas encore.
-        'host' => getenv('MAIL_HOST') ?: '',
-        'port' => getenv('MAIL_PORT') ?: '587',
-        'username' => getenv('MAIL_USERNAME') ?: '',
-        'password' => getenv('MAIL_PASSWORD') ?: '',
-        'from_email' => getenv('MAIL_FROM_EMAIL') ?: 'noreply@budgetflow.local',
-        'from_name' => getenv('MAIL_FROM_NAME') ?: 'BudgetFlow',
+        // Gmail SMTP : STARTTLS port 587.
+        // MAIL_PASSWORD doit être un "mot de passe d'application" Gmail (pas votre mot de passe Google).
+        // Générer : myaccount.google.com → Sécurité → Mots de passe des applications
+        'host'       => getenv('MAIL_HOST')       ?: 'smtp.gmail.com',
+        'port'       => getenv('MAIL_PORT')       ?: '587',
+        'username'   => getenv('MAIL_USERNAME')   ?: '',
+        'password'   => getenv('MAIL_PASSWORD')   ?: '',
+        'from_email' => getenv('MAIL_FROM_EMAIL') ?: getenv('MAIL_USERNAME') ?: '',
+        'from_name'  => getenv('MAIL_FROM_NAME')  ?: 'BudgetFlow',
     ],
 ];

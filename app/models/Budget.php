@@ -431,6 +431,38 @@ class Budget
     }
 
     /**
+     * Retourne tous les budgets partagés avec propriétaire, membres et dépenses.
+     *
+     * @return array<array<string, mixed>>
+     */
+    public function findAllShared(): array
+    {
+        $statement = $this->pdo->query(
+            "SELECT b.id,
+                    b.name,
+                    b.type,
+                    b.period,
+                    b.amount_limit,
+                    b.start_date,
+                    b.created_at,
+                    u.name  AS owner_name,
+                    u.email AS owner_email,
+                    COUNT(DISTINCT bm.user_id)            AS member_count,
+                    COUNT(DISTINCT t.id)                  AS transaction_count,
+                    COALESCE(SUM(CASE WHEN t.type = 'expense' THEN t.amount ELSE 0 END), 0) AS total_spent
+             FROM budgets b
+             JOIN users u ON u.id = b.owner_id
+             LEFT JOIN budget_members bm ON bm.budget_id = b.id
+             LEFT JOIN transactions   t  ON t.budget_id  = b.id
+             WHERE b.type = 'shared'
+             GROUP BY b.id, b.name, b.type, b.period, b.amount_limit, b.start_date, b.created_at, u.name, u.email
+             ORDER BY b.created_at DESC"
+        );
+
+        return $statement->fetchAll();
+    }
+
+    /**
      * Get all categories available for a budget's transactions.
      *
      * @param int $userId The user ID (to get user's categories + defaults)

@@ -10,7 +10,7 @@ $totalCategories = $totalCategories ?? count($allCategories);
 $totalExpense = $totalExpense ?? 0;
 $totalIncome = $totalIncome ?? 0;
 
-$formatMoney = static fn (mixed $amount): string => number_format((float) $amount, 2, ',', ' ') . ' TND';
+$formatMoney = static fn (mixed $amount): string => number_format((float) $amount, 2, ',', ' ') . ' DT';
 
 $categoryEmojis = [
     'alimentation' => '🍔',

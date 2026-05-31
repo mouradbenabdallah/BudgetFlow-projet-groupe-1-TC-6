@@ -17,6 +17,14 @@ services:
       DB_NAME: budgetflow
       DB_USER: budgetflow
       DB_PASSWORD: budgetflow
+      # Gmail SMTP — MAIL_PASSWORD doit être un mot de passe d'application Gmail (16 car.).
+      # Générer : myaccount.google.com → Sécurité → Mots de passe des applications
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: mouradabdallah581@gmail.com
+      MAIL_FROM_EMAIL: mouradabdallah581@gmail.com
+      MAIL_FROM_NAME: BudgetFlow
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
     volumes:
       # Monte le code local dans le conteneur pour voir les changements sans reconstruire.
       - .:/var/www/html

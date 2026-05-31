@@ -116,6 +116,127 @@ class User
     }
 
     /**
+     * Retourne tous les utilisateurs filtrés avec compteurs budgets/transactions.
+     *
+     * @param string $filter all|pending|active|admin
+     * @param int $page Page (1-indexed)
+     * @param int $perPage Nombre par page
+     * @return array<array<string, mixed>>
+     */
+    public function findAllWithFilter(string $filter, int $page = 1, int $perPage = 15): array
+    {
+        $where = $this->buildFilterWhere($filter);
+        $offset = ($page - 1) * $perPage;
+
+        $statement = $this->pdo->prepare(
+            "SELECT u.id, u.name, u.email, u.role, u.is_active, u.created_at,
+                    COUNT(DISTINCT b.id)  AS budget_count,
+                    COUNT(DISTINCT t.id)  AS transaction_count,
+                    MAX(t.created_at)     AS last_activity
+             FROM users u
+             LEFT JOIN budgets      b ON b.owner_id  = u.id
+             LEFT JOIN transactions t ON t.user_id   = u.id
+             WHERE {$where}
+             GROUP BY u.id, u.name, u.email, u.role, u.is_active, u.created_at
+             ORDER BY u.created_at DESC
+             LIMIT :limit OFFSET :offset"
+        );
+        $statement->bindValue(':limit',  $perPage, PDO::PARAM_INT);
+        $statement->bindValue(':offset', $offset,  PDO::PARAM_INT);
+        $statement->execute();
+
+        return $statement->fetchAll();
+    }
+
+    /**
+     * Compte le nombre d'utilisateurs pour un filtre donné.
+     *
+     * @param string $filter all|pending|active|admin
+     */
+    public function countByFilter(string $filter): int
+    {
+        $where = $this->buildFilterWhere($filter);
+        $statement = $this->pdo->query("SELECT COUNT(*) FROM users u WHERE {$where}");
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /**
+     * Retourne les utilisateurs en attente de validation (is_active=false, role=user).
+     *
+     * @param int $limit Nombre maximum
+     * @return array<array<string, mixed>>
+     */
+    public function findAllPending(int $limit = 5): array
+    {
+        $statement = $this->pdo->prepare(
+            "SELECT id, name, email, role, is_active, created_at
+             FROM users
+             WHERE is_active = false AND role = 'user'
+             ORDER BY created_at DESC
+             LIMIT :limit"
+        );
+        $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $statement->execute();
+
+        return $statement->fetchAll();
+    }
+
+    /**
+     * Active un compte utilisateur (is_active = true).
+     *
+     * @param int $id User ID
+     */
+    public function activate(int $id): bool
+    {
+        $statement = $this->pdo->prepare("UPDATE users SET is_active = true WHERE id = :id");
+        $statement->bindValue(':id', $id, PDO::PARAM_INT);
+
+        return $statement->execute();
+    }
+
+    /**
+     * Change le rôle d'un utilisateur.
+     *
+     * @param int $id User ID
+     * @param string $role 'user' ou 'admin'
+     */
+    public function setRole(int $id, string $role): bool
+    {
+        $statement = $this->pdo->prepare("UPDATE users SET role = :role WHERE id = :id");
+        $statement->bindValue(':id',   $id,   PDO::PARAM_INT);
+        $statement->bindValue(':role', $role, PDO::PARAM_STR);
+
+        return $statement->execute();
+    }
+
+    /**
+     * Supprime un utilisateur.
+     *
+     * @param int $id User ID
+     */
+    public function deleteById(int $id): bool
+    {
+        $statement = $this->pdo->prepare("DELETE FROM users WHERE id = :id");
+        $statement->bindValue(':id', $id, PDO::PARAM_INT);
+
+        return $statement->execute();
+    }
+
+    /**
+     * Construit la clause WHERE SQL selon le filtre admin.
+     */
+    private function buildFilterWhere(string $filter): string
+    {
+        return match ($filter) {
+            'pending' => "u.is_active = false AND u.role = 'user'",
+            'active'  => "u.is_active = true  AND u.role = 'user'",
+            'admin'   => "u.role = 'admin'",
+            default   => '1=1',
+        };
+    }
+
+    /**
      * Bind a nullable string value to a PDO statement parameter.
      *
      * @param PDOStatement $statement The prepared statement

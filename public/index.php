@@ -8,6 +8,7 @@ require_once __DIR__ . '/../core/Session.php';
 require_once __DIR__ . '/../core/CSRF.php';
 require_once __DIR__ . '/../core/Auth.php';
 require_once __DIR__ . '/../core/Router.php';
+require_once __DIR__ . '/../core/Mailer.php';
 
 // Chargement des modèles.
 require_once __DIR__ . '/../app/models/User.php';
@@ -80,12 +81,17 @@ $router->post('/profile/update-password',  [ProfileController::class, 'updatePas
 $router->post('/profile/request-deletion', [ProfileController::class, 'requestDeletion']);
 
 // ADMIN
-$router->get('/admin',                 [AdminController::class, 'index']);
-$router->get('/admin/users',           [AdminController::class, 'users']);
-$router->post('/admin/users/validate', [AdminController::class, 'validateUser']);
-$router->post('/admin/users/role',     [AdminController::class, 'changeRole']);
-$router->post('/admin/users/delete',   [AdminController::class, 'deleteUser']);
-$router->get('/admin/budgets',         [AdminController::class, 'budgets']);
+$router->get('/admin',                  [AdminController::class, 'index']);
+$router->post('/admin/test-email',      [AdminController::class, 'testEmail']);
+$router->get('/admin/users',            [AdminController::class, 'users']);
+$router->get('/admin/users/export',     [AdminController::class, 'exportUsers']);
+$router->post('/admin/users/validate',  [AdminController::class, 'validateUser']);
+$router->post('/admin/users/role',      [AdminController::class, 'changeRole']);
+$router->post('/admin/users/delete',         [AdminController::class, 'deleteUser']);
+$router->post('/admin/users/reset-password', [AdminController::class, 'resetPassword']);
+$router->get('/admin/budgets',          [AdminController::class, 'budgets']);
+$router->get('/admin/send-email',       [AdminController::class, 'showSendEmail']);
+$router->post('/admin/send-email',      [AdminController::class, 'sendBulkEmail']);
 
 // Sections en attente (placeholders).
 $router->get('/analytics', function (): void {

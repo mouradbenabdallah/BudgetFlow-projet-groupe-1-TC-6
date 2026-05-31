@@ -87,8 +87,10 @@ class RapportController
                 FROM transactions t
                 JOIN budgets b ON b.id = t.budget_id
                 LEFT JOIN categories c ON c.id = t.category_id
-                LEFT JOIN budget_members bm ON bm.budget_id = b.id
-                WHERE (b.owner_id = :uid OR bm.user_id = :uid2)
+                WHERE (b.owner_id = :uid OR EXISTS (
+                    SELECT 1 FROM budget_members bm
+                    WHERE bm.budget_id = b.id AND bm.user_id = :uid2
+                ))
                   AND t.date BETWEEN :start AND :end
                 ORDER BY t.date DESC
             ");

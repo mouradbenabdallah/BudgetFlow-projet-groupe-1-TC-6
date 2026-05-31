@@ -69,8 +69,10 @@ class RapportController
                     COUNT(*) AS nb_transactions
                 FROM transactions t
                 JOIN budgets b ON b.id = t.budget_id
-                LEFT JOIN budget_members bm ON bm.budget_id = b.id
-                WHERE (b.owner_id = :uid OR bm.user_id = :uid2)
+                WHERE (b.owner_id = :uid OR EXISTS (
+                    SELECT 1 FROM budget_members bm
+                    WHERE bm.budget_id = b.id AND bm.user_id = :uid2
+                ))
                   AND t.date BETWEEN :start AND :end
             ");
             $stmt->execute([':uid' => $userId, ':uid2' => $userId, ':start' => $start, ':end' => $end]);

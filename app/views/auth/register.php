@@ -15,7 +15,7 @@ $email = $h($old['email'] ?? '');
 <div class="bf-guest-card">
 
     <span class="bf-guest-card-eyebrow">Créer un compte</span>
-    <h1 class="bf-guest-card-title">Rejoignez BudgetFlow</h1>
+    <h1 class="bf-guest-card-title">Rejoignez CASHtoCASH</h1>
     <p class="bf-guest-card-sub">
         Vous avez déjà un compte ?
         <a href="/login">Connectez-vous</a>

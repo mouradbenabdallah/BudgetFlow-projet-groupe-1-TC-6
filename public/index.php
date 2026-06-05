@@ -40,6 +40,7 @@ require_once __DIR__ . '/../app/controllers/CategoryController.php';
 require_once __DIR__ . '/../app/controllers/BudgetController.php';
 require_once __DIR__ . '/../app/controllers/ProfileController.php';
 require_once __DIR__ . '/../app/controllers/AdminController.php';
+require_once __DIR__ . '/../app/controllers/RapportController.php';
 
 $config = require __DIR__ . '/../config/config.php';
 date_default_timezone_set($config['app']['timezone']);
@@ -95,6 +96,10 @@ $router->get('/profile',                  [ProfileController::class, 'index']);
 $router->post('/profile/update-info',     [ProfileController::class, 'updateInfo']);
 $router->post('/profile/update-password', [ProfileController::class, 'updatePassword']);
 $router->post('/profile/request-deletion',[ProfileController::class, 'requestDeletion']);
+
+// ── Rapport PDF ───────────────────────────────────────────────────────────────
+$router->get('/rapport',          [RapportController::class, 'index']);
+$router->post('/rapport/generer', [RapportController::class, 'generer']);
 
 // ── AI Chat (utilisateurs uniquement) ────────────────────────────────────────
 $router->post('/api/chat', [AiController::class, 'chat']);

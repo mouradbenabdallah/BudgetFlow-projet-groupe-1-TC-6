@@ -103,7 +103,7 @@ $chartIncome      = array_column($stats['monthly_tx'] ?? [], 'income');
 <div class="adm-card mb-5" style="border-color:<?= $stats['pending_users'] > 0 ? 'rgba(245,158,11,0.3)' : '#b8c4c2' ?>;<?= $stats['pending_users'] > 0 ? 'box-shadow:rgba(0,30,43,0.12) 0px 26px 44px,rgba(0,0,0,0.13) 0px 7px 13px;' : '' ?>">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
         <i class="bi bi-exclamation-circle" style="font-size:18px;color:#f59e0b;"></i>
-        <h3 style="font-size:17px;font-weight:600;color:#001e2b;margin:0;">Validations en attente</h3>
+        <h3 class="adm-pending-h3">Validations en attente</h3>
         <?php if ($stats['pending_users'] > 0): ?>
         <span class="adm-badge-pending" style="margin-left:4px;"><?= $e($stats['pending_users']) ?> en attente</span>
         <?php endif; ?>
@@ -123,7 +123,7 @@ $chartIncome      = array_column($stats['monthly_tx'] ?? [], 'income');
                     <?= $e(strtoupper(mb_substr((string) $pending['name'], 0, 2, 'UTF-8'))) ?>
                 </div>
                 <div>
-                    <div style="font-size:14px;font-weight:600;color:#001e2b;"><?= $e($pending['name']) ?></div>
+                    <div class="adm-pending-name"><?= $e($pending['name']) ?></div>
                     <div style="font-size:12px;color:#5c6c75;"><?= $e($pending['email']) ?> · Inscrit le <?= $e(date('d/m/Y', strtotime((string) $pending['created_at']))) ?></div>
                 </div>
             </div>
@@ -155,15 +155,11 @@ $chartIncome      = array_column($stats['monthly_tx'] ?? [], 'income');
             <span class="adm-card-mono">Outils</span>
             <div class="adm-card-title" style="margin-bottom:12px;">Actions rapides</div>
             <div style="display:flex;flex-direction:column;gap:8px;">
-                <a href="/admin/users?filter=pending" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:10px;border:1px solid #b8c4c2;text-decoration:none;color:#001e2b;font-size:13px;font-weight:500;transition:border-color .15s;" onmouseover="this.style.borderColor='#00684a'" onmouseout="this.style.borderColor='#b8c4c2'">
+                <a href="/admin/users?filter=pending" class="adm-quick-link">
                     <span><i class="bi bi-check2-circle" style="color:#f59e0b;margin-right:8px;"></i>Valider des comptes</span>
                     <?php if ($stats['pending_users'] > 0): ?><span class="adm-pending-pill"><?= $e($stats['pending_users']) ?></span><?php endif; ?>
                 </a>
-                <a href="/admin/users/export?filter=all" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:10px;border:1px solid #b8c4c2;text-decoration:none;color:#001e2b;font-size:13px;font-weight:500;transition:border-color .15s;" onmouseover="this.style.borderColor='#006cfa'" onmouseout="this.style.borderColor='#b8c4c2'">
-                    <span><i class="bi bi-download" style="color:#006cfa;margin-right:8px;"></i>Exporter utilisateurs (CSV)</span>
-                    <i class="bi bi-chevron-right" style="color:#b8c4c2;"></i>
-                </a>
-                <a href="/admin/budgets" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:10px;border:1px solid #b8c4c2;text-decoration:none;color:#001e2b;font-size:13px;font-weight:500;transition:border-color .15s;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#b8c4c2'">
+                <a href="/admin/budgets" class="adm-quick-link">
                     <span><i class="bi bi-wallet2" style="color:#a855f7;margin-right:8px;"></i>Superviser les budgets partagés</span>
                     <i class="bi bi-chevron-right" style="color:#b8c4c2;"></i>
                 </a>
@@ -174,14 +170,14 @@ $chartIncome      = array_column($stats['monthly_tx'] ?? [], 'income');
         <div class="adm-card" style="padding:20px;">
             <span class="adm-card-mono">Diagnostic</span>
             <div class="adm-card-title" style="margin-bottom:12px;">Email SMTP Gmail</div>
-            <div style="background:#f9fbfb;border:1px solid #f0f2f2;border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+            <div class="adm-diag-box">
                 <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
-                    <span style="color:#5c6c75;font-family:'Source Code Pro',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;">Serveur</span>
-                    <span style="color:#001e2b;font-family:monospace;">smtp.gmail.com:587</span>
+                    <span class="adm-diag-label">Serveur</span>
+                    <span class="adm-diag-value">smtp.gmail.com:587</span>
                 </div>
                 <div style="display:flex;justify-content:space-between;font-size:12px;">
-                    <span style="color:#5c6c75;font-family:'Source Code Pro',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;">Expéditeur</span>
-                    <span style="color:#001e2b;font-family:monospace;font-size:11px;"><?= $e($mailFrom) ?></span>
+                    <span class="adm-diag-label">Expéditeur</span>
+                    <span class="adm-diag-value" style="font-size:11px;"><?= $e($mailFrom) ?></span>
                 </div>
             </div>
             <form method="post" action="/admin/test-email">
@@ -211,7 +207,7 @@ $chartIncome      = array_column($stats['monthly_tx'] ?? [], 'income');
     <div style="overflow-x:auto;margin:0 -24px;padding:0 24px;">
         <table style="width:100%;border-collapse:collapse;">
             <thead>
-                <tr style="border-bottom:1px solid #b8c4c2;background:#f9fbfb;">
+                <tr class="adm-thead-row">
                     <th class="adm-th">Date</th>
                     <th class="adm-th">Utilisateur</th>
                     <th class="adm-th">Budget</th>
@@ -221,7 +217,7 @@ $chartIncome      = array_column($stats['monthly_tx'] ?? [], 'income');
             </thead>
             <tbody>
                 <?php foreach ($stats['recent_activity'] as $i => $tx): ?>
-                <tr style="border-bottom:<?= $i < count($stats['recent_activity']) - 1 ? '1px solid #f0f2f2' : 'none' ?>;" onmouseover="this.style.background='#f9fbfb'" onmouseout="this.style.background='transparent'">
+                <tr class="adm-row-hover" style="border-bottom:<?= $i < count($stats['recent_activity']) - 1 ? '1px solid var(--border,#f0f2f2)' : 'none' ?>;">
                     <td class="adm-td" style="color:#5c6c75;font-family:'Source Code Pro',monospace;font-size:12px;"><?= $e(date('d/m/Y', strtotime((string) $tx['date']))) ?></td>
                     <td class="adm-td"><?= $e($tx['user_name']) ?></td>
                     <td class="adm-td" style="color:#3d4f58;"><?= $e($tx['budget_name']) ?></td>
@@ -310,10 +306,10 @@ $chartIncome      = array_column($stats['monthly_tx'] ?? [], 'income');
         foreach ($distrib as $d): ?>
         <div style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                <span style="font-size:13px;font-weight:500;color:#001e2b;"><?= $e($d['label']) ?></span>
+                <span class="adm-distrib-label"><?= $e($d['label']) ?></span>
                 <span style="font-size:13px;color:#5c6c75;"><?= $e($d['count']) ?></span>
             </div>
-            <div style="height:8px;border-radius:999px;background:#f0f2f2;overflow:hidden;">
+            <div class="adm-distrib-track">
                 <div style="height:100%;border-radius:999px;background:<?= $e($d['color']) ?>;width:<?= $d['count'] > 0 ? min(100, round($d['count'] / $total * 100)) : 0 ?>%;transition:width .5s;"></div>
             </div>
         </div>

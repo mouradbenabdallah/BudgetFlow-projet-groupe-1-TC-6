@@ -52,15 +52,14 @@ $filters = [
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
     <!-- Filtres -->
     <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <?php foreach ($filters as $f): ?>
+        <?php foreach ($filters as $f): $isActive = $filter === $f['key']; ?>
         <a href="/admin/users?filter=<?= $e($f['key']) ?>"
-           style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:999px;font-size:13px;font-weight:500;text-decoration:none;border:1px solid;transition:all .15s;
-                  <?= $filter === $f['key'] ? 'background:#001e2b;color:#fff;border-color:#001e2b;' : 'background:transparent;color:#5c6c75;border-color:#b8c4c2;' ?>">
+           class="adm-filter-link <?= $isActive ? 'adm-filter-link-active' : 'adm-filter-link-idle' ?>">
             <?= $e($f['label']) ?>
             <?php if (!empty($f['count']) && $f['count'] > 0): ?>
                 <span style="font-size:10px;font-weight:700;padding:0 6px;border-radius:99px;min-width:18px;text-align:center;
-                             background:<?= $filter === $f['key'] ? 'rgba(255,255,255,0.2)' : '#f59e0b' ?>;
-                             color:<?= $filter === $f['key'] ? '#fff' : '#1A1D27' ?>;"><?= $f['count'] ?></span>
+                             background:<?= $isActive ? 'rgba(255,255,255,0.2)' : '#f59e0b' ?>;
+                             color:<?= $isActive ? '#fff' : '#1A1D27' ?>;"><?= $f['count'] ?></span>
             <?php endif; ?>
         </a>
         <?php endforeach; ?>
@@ -73,26 +72,21 @@ $filters = [
             <input id="userSearch" type="search" placeholder="Rechercher nom ou email…"
                    autocomplete="off" oninput="filterUsers(this.value)">
         </div>
-        <a href="/admin/users/export?filter=<?= $e($filter) ?>"
-           style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;border:1px solid #b8c4c2;background:#fff;color:#3d4f58;font-size:13px;text-decoration:none;font-weight:500;transition:border-color .15s;"
-           onmouseover="this.style.borderColor='#001e2b'" onmouseout="this.style.borderColor='#b8c4c2'">
-            <i class="bi bi-download"></i> CSV
-        </a>
     </div>
 </div>
 
 <!-- Tableau -->
-<div style="background:#fff;border:1px solid #b8c4c2;border-radius:16px;overflow:hidden;box-shadow:rgba(0,30,43,0.06) 0px 4px 16px;">
+<div class="adm-table-wrap">
     <?php if (empty($users)): ?>
-        <div style="text-align:center;padding:64px 16px;color:#b8c4c2;">
-            <i class="bi bi-people" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+        <div class="adm-empty-state" style="text-align:center;padding:64px 16px;">
+            <i class="bi bi-people" style="font-size:40px;display:block;margin-bottom:12px;opacity:.4;"></i>
             Aucun utilisateur dans cette catégorie.
         </div>
     <?php else: ?>
         <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;" id="usersTable">
                 <thead>
-                    <tr style="border-bottom:1px solid #b8c4c2;background:#f9fbfb;">
+                    <tr class="adm-thead-row">
                         <th class="adm-th">Utilisateur</th>
                         <th class="adm-th">Rôle</th>
                         <th class="adm-th">Statut</th>
@@ -116,10 +110,9 @@ $filters = [
                         }
                         $uInit = $uInit ?: '?';
                     ?>
-                    <tr class="user-row"
+                    <tr class="user-row adm-row-hover"
                         data-search="<?= $e(strtolower($u['name'] . ' ' . $u['email'])) ?>"
-                        style="border-bottom:<?= $i < count($users) - 1 ? '1px solid #f0f2f2' : 'none' ?>;"
-                        onmouseover="this.style.background='#f9fbfb'" onmouseout="this.style.background='transparent'">
+                        style="border-bottom:<?= $i < count($users) - 1 ? '1px solid var(--border, #f0f2f2)' : 'none' ?>;">
 
                         <!-- Utilisateur -->
                         <td class="adm-td">
@@ -128,7 +121,7 @@ $filters = [
                                     <?= $e($uInit) ?>
                                 </div>
                                 <div>
-                                    <div style="font-size:13px;font-weight:600;color:#001e2b;">
+                                    <div class="adm-user-name">
                                         <?= $e($u['name']) ?>
                                         <?php if ($isMe): ?><span style="font-size:10px;background:rgba(0,108,250,.1);color:#006cfa;padding:1px 6px;border-radius:4px;margin-left:4px;">Moi</span><?php endif; ?>
                                     </div>
@@ -158,10 +151,10 @@ $filters = [
                         </td>
 
                         <!-- Budgets -->
-                        <td class="adm-td" style="text-align:center;font-size:13px;font-weight:600;color:#001e2b;"><?= $e($u['budget_count']) ?></td>
+                        <td class="adm-td" style="text-align:center;font-size:13px;font-weight:600;"><?= $e($u['budget_count']) ?></td>
 
                         <!-- Transactions -->
-                        <td class="adm-td" style="text-align:center;font-size:13px;font-weight:600;color:#001e2b;"><?= $e($u['transaction_count']) ?></td>
+                        <td class="adm-td" style="text-align:center;font-size:13px;font-weight:600;"><?= $e($u['transaction_count']) ?></td>
 
                         <!-- Date -->
                         <td class="adm-td" style="font-family:'Source Code Pro',monospace;font-size:12px;color:#5c6c75;">
@@ -237,18 +230,16 @@ $filters = [
 
         <!-- Pagination -->
         <?php if ($totalPages > 1): ?>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid #f0f2f2;">
-            <span style="font-size:12px;color:#5c6c75;font-family:'Source Code Pro',monospace;">
+        <div class="adm-pagination-wrap">
+            <span class="adm-pagination-info">
                 Page <?= $e($page) ?> / <?= $e($totalPages) ?> — <?= $e($totalCount) ?> utilisateurs
             </span>
             <div style="display:flex;gap:6px;">
                 <?php if ($page > 1): ?>
-                <a href="/admin/users?filter=<?= $e($filter) ?>&page=<?= $page - 1 ?>"
-                   style="padding:6px 14px;border-radius:8px;border:1px solid #b8c4c2;font-size:13px;color:#3d4f58;text-decoration:none;">← Préc.</a>
+                <a href="/admin/users?filter=<?= $e($filter) ?>&page=<?= $page - 1 ?>" class="adm-pagination-btn">← Préc.</a>
                 <?php endif; ?>
                 <?php if ($page < $totalPages): ?>
-                <a href="/admin/users?filter=<?= $e($filter) ?>&page=<?= $page + 1 ?>"
-                   style="padding:6px 14px;border-radius:8px;border:1px solid #b8c4c2;font-size:13px;color:#3d4f58;text-decoration:none;">Suiv. →</a>
+                <a href="/admin/users?filter=<?= $e($filter) ?>&page=<?= $page + 1 ?>" class="adm-pagination-btn">Suiv. →</a>
                 <?php endif; ?>
             </div>
         </div>

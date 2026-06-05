@@ -199,7 +199,7 @@ $evolutionJson = json_encode($evolution, $jsonFlags) ?: '[]';
                         ?>
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
                             <i class="bi bi-wallet2" style="font-size:16px;color:#5c6c75;"></i>
-                            <span style="font-size:13px;font-weight:500;color:#001e2b"><?= $e($budget['name'] ?? '') ?></span>
+                            <span style="font-size:13px;font-weight:500;color:var(--text-primary)"><?= $e($budget['name'] ?? '') ?></span>
                             <span style="margin-left:auto;font-size:12px;color:<?= $e($budgetProgressColor) ?>;font-weight:600"><?= $e($barPercent) ?>%</span>
                         </div>
                         <div class="bf-progress-track">

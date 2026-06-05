@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><title>Invitation BudgetFlow</title></head>
+<head><meta charset="UTF-8"><title>Invitation CASHtoCASH</title></head>
 <body style="margin:0;padding:0;background:#0F1117;font-family:Arial,Helvetica,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0F1117;padding:40px 0;">
   <tr><td align="center">
@@ -8,7 +8,7 @@
 
     <!-- Logo -->
     <tr><td style="padding:28px 32px 20px;text-align:center;border-bottom:1px solid #2A2F45;">
-      <span style="font-size:24px;font-weight:bold;color:#6C63FF;">BudgetFlow</span>
+      <span style="font-size:24px;font-weight:bold;color:#6C63FF;">CASHtoCASH</span>
     </td></tr>
 
     <!-- Body -->
@@ -52,13 +52,13 @@
       </div>
 
       <p style="font-size:12px;color:#555B75;margin:0;line-height:1.6;">
-        Si vous n'avez pas de compte, vous pouvez en créer un sur BudgetFlow pour rejoindre ce budget.
+        Si vous n'avez pas de compte, vous pouvez en créer un sur CASHtoCASH pour rejoindre ce budget.
       </p>
     </td></tr>
 
     <!-- Footer -->
     <tr><td style="padding:16px 32px;text-align:center;border-top:1px solid #2A2F45;">
-      <p style="font-size:12px;color:#555B75;margin:0;">&copy; 2025 BudgetFlow &mdash; ITEAM University</p>
+      <p style="font-size:12px;color:#555B75;margin:0;">&copy; 2025 CASHtoCASH &mdash; ITEAM University</p>
     </td></tr>
 
   </table>

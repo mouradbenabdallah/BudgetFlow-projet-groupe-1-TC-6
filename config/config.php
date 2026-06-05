@@ -31,7 +31,7 @@ return [
     'ollama' => [
         // Ollama tourne dans le service Docker "ollama" — ne pas utiliser localhost ici.
         'host'  => getenv('OLLAMA_HOST') ?: 'http://ollama:11434',
-        'model' => getenv('OLLAMA_MODEL') ?: 'llama3.2:1b',
+        'model' => getenv('OLLAMA_MODEL') ?: 'gemma2:2b',
     ],
     'mail' => [
         // Gmail SMTP : STARTTLS port 587.

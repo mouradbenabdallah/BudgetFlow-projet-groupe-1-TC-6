@@ -27,6 +27,7 @@ $mainNavigation = [
     ['path' => '/budgets', 'label' => 'Budgets', 'icon' => 'bi-wallet2'],
     ['path' => '/budgets/shared', 'label' => 'Budgets partagés', 'icon' => 'bi-people'],
     ['path' => '/categories', 'label' => 'Catégories', 'icon' => 'bi-tag'],
+    ['path' => '/rapport', 'label' => 'Rapport PDF', 'icon' => 'bi-file-earmark-pdf'],
 ];
 
 $accountNavigation = [
@@ -36,11 +37,11 @@ $isAdmin = ($sidebarUser['role'] ?? 'user') === 'admin';
 ?>
 
 <aside class="bf-sidebar" aria-label="Navigation principale">
-    <a class="bf-sidebar-brand" href="/dashboard" aria-label="BudgetFlow Dashboard">
+    <a class="bf-sidebar-brand" href="/dashboard" aria-label="CASHtoCASH Dashboard">
         <span class="bf-sidebar-brand-icon" aria-hidden="true">
             <svg width="18" height="18" viewBox="0 0 20 20"><path d="M10 2C6.13 2 3 5.13 3 9c0 2.38 1.19 4.47 3 5.74V17h8v-2.26C15.81 13.47 17 11.38 17 9c0-3.87-3.13-7-7-7z" fill="#00ed64"/><path d="M8 17v1h4v-1H8z" fill="#00ed64" opacity="0.7"/></svg>
         </span>
-        <span style="font-size:20px;letter-spacing:-0.5px">Budget<span class="bf-sidebar-brand-accent">Flow</span></span>
+        <span style="font-size:20px;letter-spacing:-0.5px">CASHto<span class="bf-sidebar-brand-accent">CASH</span></span>
     </a>
 
     <nav class="bf-sidebar-nav" aria-label="Menu principal">

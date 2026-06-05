@@ -1,5 +1,5 @@
 <?php
-$emailTitle = 'Modification de votre rôle BudgetFlow';
+$emailTitle = 'Modification de votre rôle CASHtoCASH';
 $e = static fn (mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 $isAdmin = ($newRole ?? 'user') === 'admin';
 require __DIR__ . '/partials/top.php';

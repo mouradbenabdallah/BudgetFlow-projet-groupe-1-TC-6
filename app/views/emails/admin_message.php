@@ -21,7 +21,7 @@ require __DIR__ . '/partials/top.php';
 </div>
 
 <h1 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px;text-align:center;letter-spacing:-0.3px;"><?= $e($subject ?? 'Message de l\'administration') ?></h1>
-<p style="font-size:14px;color:#b8c4c2;text-align:center;margin:0 0 32px;">Message de l'équipe BudgetFlow</p>
+<p style="font-size:14px;color:#b8c4c2;text-align:center;margin:0 0 32px;">Message de l'équipe CASHtoCASH</p>
 
 <p style="font-size:15px;color:#c8d8df;margin:0 0 16px;">
   Bonjour <strong style="color:#ffffff;"><?= $e($userName ?? 'Utilisateur') ?></strong>,
@@ -46,14 +46,14 @@ require __DIR__ . '/partials/top.php';
 <div style="text-align:center;margin:0 0 28px;">
   <a href="<?= $e($loginUrl ?? '/login') ?>"
      style="display:inline-block;background:#006cfa;color:#ffffff;font-size:14px;font-weight:700;padding:13px 36px;border-radius:100px;text-decoration:none;letter-spacing:0.2px;">
-    Accéder à BudgetFlow →
+    Accéder à CASHtoCASH →
   </a>
 </div>
 
 <!-- Note de bas -->
 <div style="background:rgba(0,108,250,0.06);border:1px solid rgba(0,108,250,0.15);border-radius:10px;padding:14px 18px;">
   <p style="font-size:12px;color:#5c6c75;margin:0;line-height:1.6;">
-    Ce message a été envoyé par l'administrateur de BudgetFlow. Si vous avez des questions, contactez l'administration.
+    Ce message a été envoyé par l'administrateur de CASHtoCASH. Si vous avez des questions, contactez l'administration.
   </p>
 </div>
 

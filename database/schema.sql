@@ -9,6 +9,9 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255),
     role VARCHAR(10) DEFAULT 'user' CHECK (role IN ('user', 'admin')),
     is_active BOOLEAN DEFAULT false,
+    phone VARCHAR(20) DEFAULT NULL,
+    preferences JSONB DEFAULT NULL,
+    last_login_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );
 

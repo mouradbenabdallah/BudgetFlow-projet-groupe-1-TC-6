@@ -1,5 +1,5 @@
 <?php
-$emailTitle = 'Votre compte BudgetFlow a été activé';
+$emailTitle = 'Votre compte CASHtoCASH a été activé';
 $e = static fn (mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 require __DIR__ . '/partials/top.php';
 ?>
@@ -12,13 +12,13 @@ require __DIR__ . '/partials/top.php';
 </div>
 
 <h1 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px;text-align:center;letter-spacing:-0.3px;">Compte activé !</h1>
-<p style="font-size:14px;color:#b8c4c2;text-align:center;margin:0 0 32px;">Votre accès à BudgetFlow est maintenant disponible.</p>
+<p style="font-size:14px;color:#b8c4c2;text-align:center;margin:0 0 32px;">Votre accès à CASHtoCASH est maintenant disponible.</p>
 
 <p style="font-size:15px;color:#c8d8df;margin:0 0 12px;">
   Bonjour <strong style="color:#ffffff;"><?= $e($userName ?? 'Utilisateur') ?></strong>,
 </p>
 <p style="font-size:14px;color:#b8c4c2;margin:0 0 8px;line-height:1.7;">
-  Votre compte a été <strong style="color:#00ed64;">validé par un administrateur</strong> BudgetFlow. Vous pouvez désormais vous connecter et commencer à gérer vos budgets personnels et collaboratifs.
+  Votre compte a été <strong style="color:#00ed64;">validé par un administrateur</strong> CASHtoCASH. Vous pouvez désormais vous connecter et commencer à gérer vos budgets personnels et collaboratifs.
 </p>
 
 <!-- CTA -->
@@ -32,7 +32,7 @@ require __DIR__ . '/partials/top.php';
 <!-- Note -->
 <div style="background:rgba(0,237,100,0.06);border:1px solid rgba(0,237,100,0.15);border-radius:10px;padding:14px 18px;">
   <p style="font-size:12px;color:#5c6c75;margin:0;line-height:1.6;">
-    Si vous n'avez pas créé de compte BudgetFlow, ignorez cet email en toute sécurité.
+    Si vous n'avez pas créé de compte CASHtoCASH, ignorez cet email en toute sécurité.
   </p>
 </div>
 

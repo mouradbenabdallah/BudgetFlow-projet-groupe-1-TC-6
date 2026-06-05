@@ -1,5 +1,5 @@
 <?php
-$emailTitle = 'Email de test — BudgetFlow';
+$emailTitle = 'Email de test — CASHtoCASH';
 $e = static fn (mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 require __DIR__ . '/partials/top.php';
 ?>
@@ -20,7 +20,7 @@ require __DIR__ . '/partials/top.php';
   Bonjour <strong style="color:#ffffff;"><?= $e($adminName ?? 'Administrateur') ?></strong>,
 </p>
 <p style="font-size:14px;color:#b8c4c2;margin:0 0 20px;line-height:1.7;">
-  Cet email confirme que le système d'envoi de BudgetFlow est correctement configuré avec Gmail SMTP.
+  Cet email confirme que le système d'envoi de CASHtoCASH est correctement configuré avec Gmail SMTP.
 </p>
 
 <!-- Config summary -->

@@ -5,7 +5,7 @@ $email = $h($old['email'] ?? '');
 <div class="bf-guest-card">
 
     <span class="bf-guest-card-eyebrow">Bon Retour</span>
-    <h1 class="bf-guest-card-title">Connectez-vous à BudgetFlow</h1>
+    <h1 class="bf-guest-card-title">Connectez-vous à CASHtoCASH</h1>
     <p class="bf-guest-card-sub">
         Vous n'avez pas de compte ?
         <a href="/register">Créez-en un</a>
@@ -87,7 +87,3 @@ $email = $h($old['email'] ?? '');
     </form>
 </div>
 
-<!-- Demo hint -->
-<div class="bf-guest-demo">
-    Démo : <strong style="color:#b8c4c2">admin@budgetflow.local</strong> / <strong style="color:#b8c4c2">password</strong>
-</div>

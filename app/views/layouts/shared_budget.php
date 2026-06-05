@@ -1,7 +1,7 @@
 <?php
 $layoutUser = $user ?? Auth::getUser() ?? [];
 $pageTitleText = (string) ($pageTitle ?? $title ?? 'Budgets partagés');
-$documentTitle = htmlspecialchars($pageTitleText . ' - BudgetFlow', ENT_QUOTES, 'UTF-8');
+$documentTitle = htmlspecialchars($pageTitleText . ' - CASHtoCASH', ENT_QUOTES, 'UTF-8');
 $safePageTitle = htmlspecialchars($pageTitleText, ENT_QUOTES, 'UTF-8');
 $nameParts = preg_split('/\s+/', trim((string) ($layoutUser['name'] ?? 'Utilisateur'))) ?: [];
 $displayName = $nameParts[0] ?? 'Utilisateur';

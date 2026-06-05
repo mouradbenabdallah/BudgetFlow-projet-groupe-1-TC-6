@@ -84,7 +84,7 @@ $buildPageUrl = static function (int $p) use ($filterType, $filterCategoryId, $m
             </div>
         </div>
 
-        <div style="background:#fff;border:1px solid #b8c4c2;border-radius:16px;padding:20px;box-shadow:rgba(0,30,43,0.06) 0px 4px 16px;margin-bottom:20px">
+        <div class="bf-card" style="margin-bottom:20px;">
             <div class="bf-filter-bar" style="margin-bottom:0">
                 <div class="bf-filter-group">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -101,7 +101,7 @@ $buildPageUrl = static function (int $p) use ($filterType, $filterCategoryId, $m
                     </svg>
                     Filters
                 </button>
-                <button style="background:#00684a;color:#fff;border:1px solid #00684a;border-radius:100px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
+                <button class="bf-btn-primary" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19" />
@@ -382,12 +382,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     typeButtons.forEach(function(btn) {
         btn.addEventListener('click', function() {
-            typeButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            typeInput.value = btn.getAttribute('data-type');
+            typeButtons.forEach(function(b) {
+                b.classList.remove('active-expense', 'active-income');
+            });
+            var type = btn.getAttribute('data-type');
+            btn.classList.add(type === 'income' ? 'active-income' : 'active-expense');
+            typeInput.value = type;
         });
     });
-    // Set default
-    typeButtons[0].classList.add('active');
 });
 </script>

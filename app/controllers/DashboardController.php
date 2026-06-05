@@ -170,7 +170,9 @@ class DashboardController
      */
     private function render(string $view, array $data = []): void
     {
-        extract($data, EXTR_SKIP);
+        // Use EXTR_OVERWRITE so 'data' key overwrites the $data parameter,
+        // making $data available in the view as the financial data array.
+        extract($data, EXTR_OVERWRITE);
 
         ob_start();
         require __DIR__ . '/../views/' . $view . '.php';

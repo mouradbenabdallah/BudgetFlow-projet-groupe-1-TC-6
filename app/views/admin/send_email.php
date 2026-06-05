@@ -45,18 +45,18 @@ $allUsers = $allUsers ?? [];
             <!-- Sujet -->
             <div class="mb-4">
                 <label class="form-label" style="font-size:12px;font-weight:600;color:#5c6c75;text-transform:uppercase;letter-spacing:1px;">Sujet</label>
-                <input type="text" name="subject" class="form-control" required
+                <input type="text" name="subject" required
                     placeholder="Objet de votre message…"
                     value="<?= $e($_POST['subject'] ?? '') ?>"
-                    style="border-radius:10px;border:1px solid #b8c4c2;font-size:14px;padding:10px 14px;color:#001e2b;">
+                    class="adm-email-input">
             </div>
 
             <!-- Corps du message -->
             <div class="mb-4">
                 <label class="form-label" style="font-size:12px;font-weight:600;color:#5c6c75;text-transform:uppercase;letter-spacing:1px;">Message</label>
-                <textarea name="message_body" class="form-control" rows="10" required
+                <textarea name="message_body" rows="10" required
                     placeholder="Rédigez votre message ici…"
-                    style="border-radius:10px;border:1px solid #b8c4c2;font-size:14px;padding:10px 14px;color:#001e2b;resize:vertical;"><?= $e($_POST['message_body'] ?? '') ?></textarea>
+                    class="adm-email-input" style="resize:vertical;"><?= $e($_POST['message_body'] ?? '') ?></textarea>
                 <div style="font-size:11px;color:#5c6c75;margin-top:6px;">
                     <i class="bi bi-info-circle"></i> Les sauts de ligne seront préservés dans l'email.
                 </div>
@@ -101,11 +101,10 @@ $allUsers = $allUsers ?? [];
             </div>
 
             <!-- Recherche rapide -->
-            <div style="display:flex;align-items:center;gap:8px;background:#f5f7f7;border:1px solid #b8c4c2;border-radius:8px;padding:6px 12px;margin-bottom:14px;">
+            <div class="adm-email-search">
                 <i class="bi bi-search" style="color:#b8c4c2;font-size:12px;"></i>
                 <input type="text" id="userSearch" placeholder="Filtrer les utilisateurs…"
-                    oninput="filterUsers(this.value)"
-                    style="background:none;border:none;outline:none;font-size:13px;color:#001e2b;width:100%;">
+                    oninput="filterUsers(this.value)">
             </div>
 
             <!-- Liste des utilisateurs -->
@@ -124,8 +123,7 @@ $allUsers = $allUsers ?? [];
                     $active = (bool) $u['is_active'];
                     $checked = isset($_POST['user_ids']) && in_array($uid, (array) $_POST['user_ids'], false);
                     ?>
-                    <label class="user-row" data-active="<?= $active ? '1' : '0' ?>"
-                        style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:background .15s;">
+                    <label class="user-row adm-user-label" data-active="<?= $active ? '1' : '0' ?>">
                         <input type="checkbox" name="user_ids[]" value="<?= $uid ?>"
                             class="user-cb form-check-input" style="margin:0;flex-shrink:0;"
                             onchange="updateCount()"
@@ -134,7 +132,7 @@ $allUsers = $allUsers ?? [];
                             <?= strtoupper(mb_substr($u['name'], 0, 1, 'UTF-8')) ?>
                         </div>
                         <div style="min-width:0;flex:1;">
-                            <div style="font-size:13px;font-weight:500;color:#001e2b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= $uname ?></div>
+                            <div class="adm-user-label-name"><?= $uname ?></div>
                             <div style="font-size:11px;color:#5c6c75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= $uemail ?></div>
                         </div>
                         <?php if (!$active): ?>
@@ -190,11 +188,6 @@ document.getElementById('sendEmailForm').addEventListener('submit', function() {
     document.getElementById('sendingMsg').style.display = 'inline-flex';
 });
 
-// Hover effect pour les lignes
-document.querySelectorAll('.user-row').forEach(row => {
-    row.addEventListener('mouseenter', () => row.style.background = '#f5f7f7');
-    row.addEventListener('mouseleave', () => row.style.background = '');
-});
 
 updateCount();
 </script>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title><?= htmlspecialchars($emailTitle ?? 'BudgetFlow', ENT_QUOTES, 'UTF-8') ?></title>
+<title><?= htmlspecialchars($emailTitle ?? 'CASHtoCASH', ENT_QUOTES, 'UTF-8') ?></title>
 <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
 </head>
 <body style="margin:0;padding:0;background:#f0f4f3;font-family:'Segoe UI',Arial,sans-serif;-webkit-text-size-adjust:100%;">

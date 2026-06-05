@@ -3,7 +3,7 @@
 $adminUser    = Auth::getUser() ?? [];
 $pageTitleText = (string) ($pageTitle ?? $title ?? 'Administration');
 $safeTitle    = htmlspecialchars($pageTitleText, ENT_QUOTES, 'UTF-8');
-$docTitle     = htmlspecialchars($pageTitleText . ' — BudgetFlow Admin', ENT_QUOTES, 'UTF-8');
+$docTitle     = htmlspecialchars("$pageTitleText — CASHtoCASH Admin", ENT_QUOTES, 'UTF-8');
 $currentPath  = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $currentQuery = $_SERVER['QUERY_STRING'] ?? '';
 
@@ -20,7 +20,7 @@ $safeName  = htmlspecialchars($adminName, ENT_QUOTES, 'UTF-8');
 $pendingBadge = (int) ($stats['pending_users'] ?? $pendingCount ?? 0);
 
 $isActive = static fn (string $path): string =>
-    ($currentPath === $path || ($path !== '/admin' && str_starts_with($currentPath, $path)))
+    $currentPath === $path || $path !== '/admin' && str_starts_with($currentPath, $path)
     ? 'active' : '';
 ?>
 <!doctype html>
@@ -215,9 +215,138 @@ $isActive = static fn (string $path): string =>
             padding-bottom: 8px; border-bottom: 2px solid #00ed64;
             display: inline-block; margin-bottom: 20px;
         }
+
+        /* ── Table & view elements ── */
+        .adm-table-wrap {
+            background: #fff; border: 1px solid #b8c4c2;
+            border-radius: 16px; overflow: hidden;
+            box-shadow: rgba(0,30,43,0.06) 0px 4px 16px;
+        }
+        .adm-thead-row { border-bottom: 1px solid #b8c4c2; background: #f9fbfb; }
+        .adm-user-name { font-size: 13px; font-weight: 600; color: #001e2b; }
+        .adm-filter-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 16px; border-radius: 999px; font-size: 13px;
+            font-weight: 500; text-decoration: none; border: 1px solid;
+            transition: all .15s;
+        }
+        .adm-filter-link-active { background: #001e2b; color: #fff; border-color: #001e2b; }
+        .adm-filter-link-idle   { background: transparent; color: #5c6c75; border-color: #b8c4c2; }
+        .adm-csv-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 10px; border: 1px solid #b8c4c2;
+            background: #fff; color: #3d4f58; font-size: 13px;
+            text-decoration: none; font-weight: 500; transition: border-color .15s;
+        }
+        .adm-csv-btn:hover { border-color: #001e2b; }
+        .adm-pagination-wrap {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 20px; border-top: 1px solid #f0f2f2;
+        }
+        .adm-pagination-info { font-size: 12px; color: #5c6c75; font-family: 'Source Code Pro', monospace; }
+        .adm-pagination-btn {
+            padding: 6px 14px; border-radius: 8px; border: 1px solid #b8c4c2;
+            font-size: 13px; color: #3d4f58; text-decoration: none;
+        }
+
+        /* ── Dark mode ── */
+        [data-theme="dark"] body { background: #0d1a21; }
+        [data-theme="dark"] .adm-page-title  { color: #e8edeb; }
+        [data-theme="dark"] .adm-page-eyebrow { color: #5c6c75; }
+        [data-theme="dark"] .adm-section-heading { color: #e8edeb; }
+        [data-theme="dark"] .adm-tab:not(.active):hover { background: rgba(255,255,255,.06); color: #e8edeb; }
+        [data-theme="dark"] .adm-badge-role-user { background: rgba(255,255,255,.06); color: #5c6c75; }
+        [data-theme="dark"] .adm-table-wrap  { background: #1c2d38; border-color: #3d4f58; }
+        [data-theme="dark"] .adm-thead-row   { background: #001e2b; border-bottom-color: #3d4f58; }
+        [data-theme="dark"] .adm-user-name   { color: #e8edeb; }
+        [data-theme="dark"] .adm-filter-link-idle   { border-color: #3d4f58; color: #5c6c75; }
+        [data-theme="dark"] .adm-filter-link-active { background: #e8edeb; color: #001e2b; border-color: #e8edeb; }
+        [data-theme="dark"] .adm-csv-btn     { background: #1c2d38; border-color: #3d4f58; color: #b8c4c2; }
+        [data-theme="dark"] .adm-csv-btn:hover { border-color: #5c6c75; }
+        [data-theme="dark"] .adm-pagination-wrap { border-top-color: #3d4f58; }
+        [data-theme="dark"] .adm-pagination-info { color: #5c6c75; }
+        [data-theme="dark"] .adm-pagination-btn  { border-color: #3d4f58; color: #b8c4c2; }
+        [data-theme="dark"] .adm-row-hover:hover td { background: #1c2d38; }
+        [data-theme="dark"] .adm-empty-state { color: #5c6c75; }
+
+        /* ── Shared content classes (used across admin views) ── */
+        .adm-pending-h3    { font-size:17px;font-weight:600;color:var(--text-primary,#001e2b);margin:0; }
+        .adm-pending-name  { font-size:14px;font-weight:600;color:var(--text-primary,#001e2b); }
+        .adm-quick-link {
+            display:flex;align-items:center;justify-content:space-between;
+            padding:11px 14px;border-radius:10px;border:1px solid var(--border,#b8c4c2);
+            text-decoration:none;color:var(--text-primary,#001e2b);font-size:13px;font-weight:500;
+            transition:border-color .15s;
+        }
+        .adm-diag-box {
+            background:var(--bg-elevated,#f9fbfb);border:1px solid var(--border,#f0f2f2);
+            border-radius:10px;padding:12px 14px;margin-bottom:14px;
+        }
+        .adm-diag-value  { color:var(--text-primary,#001e2b);font-family:monospace; }
+        .adm-distrib-label { font-size:13px;font-weight:500;color:var(--text-primary,#001e2b); }
+        .adm-distrib-track { height:8px;border-radius:999px;background:var(--border,#f0f2f2);overflow:hidden; }
+        .adm-table-footer {
+            padding:12px 20px;border-top:1px solid var(--border,#f0f2f2);
+        }
+        .adm-table-footer span { font-size:11px;color:#b8c4c2;font-family:'Source Code Pro',monospace;text-transform:uppercase;letter-spacing:1px; }
+        .adm-budget-link {
+            font-weight:600;color:var(--text-primary,#001e2b);text-decoration:none;transition:color .15s;
+        }
+        .adm-budget-link:hover { color:#00684a; }
+        .adm-email-input {
+            border-radius:10px;border:1px solid var(--border,#b8c4c2);font-size:14px;
+            padding:10px 14px;color:var(--text-primary,#001e2b);
+            background:var(--bg-card,#fff);width:100%;transition:border-color .15s;outline:none;
+            font-family:'Plus Jakarta Sans',sans-serif;
+        }
+        .adm-email-input:focus { border-color:#00684a; }
+        .adm-email-search {
+            display:flex;align-items:center;gap:8px;
+            background:var(--bg-elevated,#f5f7f7);border:1px solid var(--border,#b8c4c2);
+            border-radius:8px;padding:6px 12px;margin-bottom:14px;
+        }
+        .adm-email-search input {
+            background:none;border:none;outline:none;
+            font-size:13px;color:var(--text-primary,#001e2b);width:100%;
+        }
+        .adm-user-label {
+            display:flex;align-items:center;gap:10px;padding:8px 10px;
+            border-radius:8px;cursor:pointer;border:1px solid transparent;transition:background .15s;
+        }
+        .adm-user-label:hover { background:var(--bg-elevated,#f5f7f7); }
+        .adm-user-label-name {
+            font-size:13px;font-weight:500;color:var(--text-primary,#001e2b);
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+        }
+
+        /* Dark mode for new shared classes */
+        [data-theme="dark"] .adm-pending-h3    { color:#e8edeb; }
+        [data-theme="dark"] .adm-pending-name  { color:#e8edeb; }
+        [data-theme="dark"] .adm-quick-link    { border-color:#3d4f58;color:#b8c4c2; }
+        [data-theme="dark"] .adm-quick-link:hover { border-color:#5c6c75; }
+        [data-theme="dark"] .adm-diag-box      { background:#001e2b;border-color:#3d4f58; }
+        [data-theme="dark"] .adm-diag-value    { color:#b8c4c2; }
+        [data-theme="dark"] .adm-distrib-label { color:#b8c4c2; }
+        [data-theme="dark"] .adm-distrib-track { background:#3d4f58; }
+        [data-theme="dark"] .adm-table-footer  { border-top-color:#3d4f58; }
+        [data-theme="dark"] .adm-budget-link   { color:#b8c4c2; }
+        [data-theme="dark"] .adm-budget-link:hover { color:#00ed64; }
+        [data-theme="dark"] .adm-email-input   { background:#001e2b;border-color:#3d4f58;color:#e8edeb; }
+        [data-theme="dark"] .adm-email-input:focus { border-color:#3B82F6; }
+        [data-theme="dark"] .adm-email-search  { background:#001e2b;border-color:#3d4f58; }
+        [data-theme="dark"] .adm-email-search input { color:#e8edeb; }
+        [data-theme="dark"] .adm-user-label:hover  { background:#1c2d38; }
+        [data-theme="dark"] .adm-user-label-name   { color:#b8c4c2; }
+
+        /* ── Wavy design for admin elements ── */
+        .adm-kpi-icon { animation: bf-blob-wavy 5s ease-in-out infinite; }
+        .adm-avatar   { animation: bf-blob-wavy 6s ease-in-out infinite; }
+        .adm-kpi      { animation: bf-card-wavy 10s ease-in-out infinite; }
+        .adm-btn-approve { animation: bf-btn-wavy 7s ease-in-out infinite; }
+        .adm-badge-access { animation: bf-blob-wavy 8s ease-in-out infinite; border-radius: 999px; }
     </style>
 </head>
-<body style="background:#f5f7f7;font-family:'Plus Jakarta Sans',sans-serif;">
+<body style="font-family:'Plus Jakarta Sans',sans-serif;">
 <div style="display:flex;min-height:100vh;">
 
     <!-- ── Sidebar ── -->
@@ -229,7 +358,7 @@ $isActive = static fn (string $path): string =>
                 <svg width="18" height="18" viewBox="0 0 20 20"><path d="M10 2C6.13 2 3 5.13 3 9c0 2.38 1.19 4.47 3 5.74V17h8v-2.26C15.81 13.47 17 11.38 17 9c0-3.87-3.13-7-7-7z" fill="#00ed64"/><path d="M8 17v1h4v-1H8z" fill="#00ed64" opacity="0.7"/></svg>
             </div>
             <a href="/admin" style="font-size:19px;font-weight:700;color:#fff;text-decoration:none;letter-spacing:-.4px;">
-                Budget<span style="color:#00ed64;">Flow</span>
+                CASH<span style="color:#00ed64;">toCASH</span>
             </a>
         </div>
 

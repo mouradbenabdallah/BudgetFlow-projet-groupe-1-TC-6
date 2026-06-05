@@ -1,5 +1,5 @@
 <?php
-$emailTitle = 'Votre demande de compte BudgetFlow';
+$emailTitle = 'Votre demande de compte CASHtoCASH';
 $e = static fn (mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 require __DIR__ . '/partials/top.php';
 ?>
@@ -12,7 +12,7 @@ require __DIR__ . '/partials/top.php';
 </div>
 
 <h1 style="font-size:22px;font-weight:700;color:#ffffff;margin:0 0 8px;text-align:center;letter-spacing:-0.3px;">Demande non retenue</h1>
-<p style="font-size:14px;color:#b8c4c2;text-align:center;margin:0 0 32px;">Votre demande d'accès à BudgetFlow n'a pas pu être validée.</p>
+<p style="font-size:14px;color:#b8c4c2;text-align:center;margin:0 0 32px;">Votre demande d'accès à CASHtoCASH n'a pas pu être validée.</p>
 
 <p style="font-size:15px;color:#c8d8df;margin:0 0 12px;">
   Bonjour <strong style="color:#ffffff;"><?= $e($userName ?? 'Utilisateur') ?></strong>,

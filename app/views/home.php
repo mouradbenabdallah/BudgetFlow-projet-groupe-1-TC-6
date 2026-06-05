@@ -9,20 +9,22 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>BudgetFlow - Vos finances sous contrôle</title>
+    <title>CASHtoCASH - Vos finances sous contrôle</title>
     <meta name="description"
-        content="BudgetFlow aide les utilisateurs à suivre leurs dépenses, gérer des budgets partagés et atteindre leurs objectifs financiers.">
+        content="CASHtoCASH aide les utilisateurs à suivre leurs dépenses, gérer des budgets partagés et atteindre leurs objectifs financiers.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/style.css?v=2" rel="stylesheet">
 </head>
 
 <body class="bf-page-home">
     <header class="bf-header">
         <nav class="bf-container bf-nav" aria-label="Navigation principale">
-            <a href="/" class="bf-brand" aria-label="BudgetFlow">
+            <a href="/" class="bf-brand" aria-label="CASHtoCASH">
                 <span class="bf-brand-mark" aria-hidden="true"></span>
-                <span>Budget<span>Flow</span></span>
+                <span>CASHto<span>CASH</span></span>
             </a>
 
             <div class="bf-nav-links">
@@ -32,9 +34,12 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
             </div>
 
             <div class="bf-actions">
-                <a class="bf-btn"
-                    href="<?= $isLoggedIn ? $dashboardUrl : '/login' ?>"><?= $isLoggedIn ? 'Tableau de bord' : 'Connexion' ?></a>
-                <a class="bf-btn bf-btn-primary" href="/register">Commencer Gratuitement</a>
+                <?php if ($isLoggedIn): ?>
+                    <a class="bf-btn bf-btn-primary" href="<?= $dashboardUrl ?>">Tableau de bord</a>
+                <?php else: ?>
+                    <a class="bf-btn" href="/login">Se connecter</a>
+                    <a class="bf-btn bf-btn-primary" href="/register">S'inscrire</a>
+                <?php endif; ?>
             </div>
         </nav>
     </header>
@@ -44,23 +49,23 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
             <div class="bf-container bf-hero-inner">
                 <span class="bf-pill">Maintenant en bêta publique</span>
                 <h1>Vos finances, <span class="text-green">enfin sous contrôle</span></h1>
-                <p>BudgetFlow est la plateforme collaborative de finances personnelles qui vous aide à suivre vos
+                <p>CASHtoCASH est la plateforme collaborative de finances personnelles qui vous aide à suivre vos
                     dépenses, gérer des budgets partagés et atteindre vos objectifs financiers — ensemble.</p>
 
                 <div class="bf-hero-actions">
                     <a class="bf-btn bf-btn-primary" href="/register">Commencer Gratuitement →</a>
                 </div>
 
-                <div class="bf-dashboard" aria-label="Aperçu du tableau de bord BudgetFlow">
-                    <img src="/img/dashboard.png" alt="Tableau de bord BudgetFlow" class="bf-dashboard-img">
+                <div class="bf-dashboard" aria-label="Aperçu du tableau de bord CASHtoCASH">
+                    <img src="/img/dashboard.png" alt="Tableau de bord CASHtoCASH" class="bf-dashboard-img">
                 </div>
 
-                <div class="bf-dashboard" aria-label="Aperçu du tableau de bord BudgetFlow">
+                <div class="bf-dashboard" aria-label="Aperçu du tableau de bord CASHtoCASH">
                     <div class="bf-window-top">
                         <span class="bf-dot bf-dot-danger"></span>
                         <span class="bf-dot bf-dot-warning"></span>
                         <span class="bf-dot bf-dot-success"></span>
-                        <div class="bf-address">app.budgetflow.io/dashboard</div>
+                        <div class="bf-address">app.cashtocash.io/dashboard</div>
                     </div>
                     <div class="bf-dashboard-body">
                         <aside class="bf-sidebar-mini" aria-hidden="true">
@@ -127,7 +132,7 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
                     <span class="section-label">Fonctionnalités</span>
                     <h2>Tout ce dont vous avez besoin pour <span class="underline-green">maîtriser votre argent</span>
                     </h2>
-                    <p>Du suivi des dépenses quotidiennes à la gestion des budgets familiaux partagés, BudgetFlow vous
+                    <p>Du suivi des dépenses quotidiennes à la gestion des budgets familiaux partagés, CASHtoCASH vous
                         donne les outils pour un contrôle financier complet.</p>
                 </div>
 
@@ -213,7 +218,7 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
                         <div class="stars">
                             <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
                         </div>
-                        <p>"BudgetFlow a complètement changé ma façon de gérer mon argent. La fonction de budgets
+                        <p>"CASHtoCASH a complètement changé ma façon de gérer mon argent. La fonction de budgets
                             partagés est révolutionnaire."</p>
                         <h4>Sarah Chen</h4>
                         <span>Designer Produit chez Stripe</span>
@@ -231,7 +236,7 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
                         <div class="stars">
                             <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
                         </div>
-                        <p>"Gérer des revenus irréguliers était stressant. BudgetFlow le rend simple avec des
+                        <p>"Gérer des revenus irréguliers était stressant. CASHtoCASH le rend simple avec des
                             ajustements intelligents."</p>
                         <h4>Emma Thompson</h4>
                         <span>Consultante Indépendante</span>
@@ -244,7 +249,7 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
             <div class="bf-container">
                 <span class="section-label">Commencez aujourd'hui</span>
                 <h2>Prenez le contrôle de votre <span class="text-green">avenir financier</span></h2>
-                <p>Rejoignez 2,4 millions d'utilisateurs qui font confiance à BudgetFlow pour gérer leurs finances.
+                <p>Rejoignez 2,4 millions d'utilisateurs qui font confiance à CASHtoCASH pour gérer leurs finances.
                     Commencez gratuitement, mettez à niveau quand vous êtes prêt.</p>
                 <a class="bf-btn bf-btn-primary" href="/register">Créer un Compte Gratuit →</a>
             </div>
@@ -257,7 +262,7 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
                 <div>
                     <a href="/" class="bf-brand">
                         <span class="bf-brand-mark" aria-hidden="true"></span>
-                        <span>Budget<span>Flow</span></span>
+                        <span>CASHto<span>CASH</span></span>
                     </a>
                     <p class="footer-copy">La plateforme moderne pour la gestion budgétaire personnelle et
                         collaborative.</p>
@@ -285,7 +290,7 @@ $dashboardUrl = ($user['role'] ?? 'user') === 'admin' ? '/admin' : '/dashboard';
                 </div>
             </div>
             <div class="footer-bottom">
-                <span>© 2026 BudgetFlow, Inc. Tous droits réservés.</span>
+                <span>© 2026 CASHtoCASH, Inc. Tous droits réservés.</span>
                 <span>Politique de confidentialité · Conditions d'utilisation · Paramètres de cookies</span>
             </div>
         </div>

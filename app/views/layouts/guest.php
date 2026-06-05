@@ -1,5 +1,5 @@
 <?php
-$pageTitle = htmlspecialchars(($title ?? 'Authentification') . ' - BudgetFlow', ENT_QUOTES, 'UTF-8');
+$pageTitle = htmlspecialchars(($title ?? 'Authentification') . ' - CASHtoCASH', ENT_QUOTES, 'UTF-8');
 ?>
 <!doctype html>
 <html lang="fr">
@@ -188,7 +188,7 @@ $pageTitle = htmlspecialchars(($title ?? 'Authentification') . ' - BudgetFlow', 
                     Votre histoire d'argent<br>commence <span>ici</span>
                 </h2>
                 <p class="bf-guest-copy">
-                    Rejoignez 2,4 millions d'utilisateurs qui gèrent leurs finances intelligemment avec la plateforme collaborative BudgetFlow.
+                    Rejoignez 2,4 millions d'utilisateurs qui gèrent leurs finances intelligemment avec la plateforme collaborative CASHtoCASH.
                 </p>
                 <div class="bf-guest-stats">
                     <div>
@@ -207,7 +207,7 @@ $pageTitle = htmlspecialchars(($title ?? 'Authentification') . ' - BudgetFlow', 
             </div>
 
             <div class="bf-guest-testimonial">
-                <p>"BudgetFlow m'a aidé à économiser 2 400 TND lors de mon premier mois simplement en visualisant où allait mon argent."</p>
+                <p>"CASHtoCASH m'a aidé à économiser 2 400 TND lors de mon premier mois simplement en visualisant où allait mon argent."</p>
                 <div class="bf-guest-author">
                     <div class="bf-guest-author-avatar">SC</div>
                     <div>

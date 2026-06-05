@@ -95,10 +95,12 @@
       });
     });
 
+  var isDark = document.documentElement.dataset.theme === "dark";
+
   if (typeof Chart !== "undefined") {
-    Chart.defaults.color = "#718096";
-    Chart.defaults.borderColor = "#e7efed";
-    Chart.defaults.font.family = "Inter";
+    Chart.defaults.color = isDark ? "#b8c4c2" : "#5c6c75";
+    Chart.defaults.borderColor = isDark ? "#3d4f58" : "#e7efed";
+    Chart.defaults.font.family = "'Plus Jakarta Sans', Inter, sans-serif";
   }
 
   function tnd(value) {
@@ -152,7 +154,7 @@
           {
             label: "Dépenses",
             data: expenseData,
-            backgroundColor: "#e5e9e7",
+            backgroundColor: "#e11d48",
             borderRadius: 6,
             barPercentage: 0.5,
             categoryPercentage: 0.7,
@@ -169,7 +171,7 @@
               display: false,
             },
             ticks: {
-              color: "#8ba0a3",
+              color: isDark ? "#5c6c75" : "#8ba0a3",
               font: {
                 size: 12,
                 weight: "500",
@@ -182,11 +184,11 @@
           y: {
             beginAtZero: true,
             grid: {
-              color: "#f0f4f3",
+              color: isDark ? "#3d4f58" : "#f0f4f3",
               drawBorder: false,
             },
             ticks: {
-              color: "#8ba0a3",
+              color: isDark ? "#5c6c75" : "#8ba0a3",
               font: {
                 size: 11,
                 weight: "500",
@@ -207,7 +209,7 @@
           legend: {
             position: "bottom",
             labels: {
-              color: "#8ba0a3",
+              color: isDark ? "#b8c4c2" : "#8ba0a3",
               boxWidth: 12,
               boxHeight: 12,
               padding: 20,
@@ -255,7 +257,7 @@
           {
             data: data,
             backgroundColor: colors,
-            borderColor: "#ffffff",
+            borderColor: isDark ? "#1c2d38" : "#ffffff",
             borderWidth: 4,
             hoverOffset: 6,
           },

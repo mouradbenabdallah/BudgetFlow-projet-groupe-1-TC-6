@@ -1,8 +1,8 @@
 <?php
 // Layout principal pour toutes les pages accessibles après connexion.
 $layoutUser = $user ?? Auth::getUser() ?? [];
-$pageTitleText = (string) ($pageTitle ?? $title ?? 'BudgetFlow');
-$documentTitle = htmlspecialchars($pageTitleText . ' - BudgetFlow', ENT_QUOTES, 'UTF-8');
+$pageTitleText = (string) ($pageTitle ?? $title ?? 'CASHtoCASH');
+$documentTitle = htmlspecialchars($pageTitleText . ' - CASHtoCASH', ENT_QUOTES, 'UTF-8');
 $safePageTitle = htmlspecialchars($pageTitleText, ENT_QUOTES, 'UTF-8');
 $nameParts = preg_split('/\s+/', trim((string) ($layoutUser['name'] ?? 'Utilisateur'))) ?: [];
 $displayName = $nameParts[0] ?? 'Utilisateur';
@@ -63,7 +63,8 @@ $safeInitials = htmlspecialchars(strtoupper($initials !== '' ? $initials : 'U'),
                         'Nouveau budget'  => 'Créez un nouveau budget pour suivre vos dépenses',
                         'Modifier le budget' => 'Modifiez les paramètres de votre budget',
                         'Profil'          => 'Gérez vos informations personnelles',
-                        'Paramètres'      => 'Configurez votre compte BudgetFlow',
+                        'Paramètres'      => 'Configurez votre compte CASHtoCASH',
+                        'Rapport PDF'     => 'Exportez vos données financières en PDF',
 
                     ];
                     $topbarSubtitle = $subtitleMap[$pageTitleText] ?? ('Bon retour, ' . $safeUserName);

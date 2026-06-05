@@ -172,12 +172,10 @@ class AiController
         $ollamaHost  = rtrim((string) ($config['ollama']['host']  ?? 'http://ollama:11434'), '/');
         $ollamaModel = (string) ($config['ollama']['model'] ?? 'llama3.2:1b');
 
-        // System prompt — kept concise so the small 1B model doesn't get confused.
+        // System prompt — kept concise so the small model doesn't get confused.
         $messages = [[
             'role'    => 'system',
-            'content' => "Tu es un assistant financier intégré dans BudgetFlow. "
-                       . "Réponds toujours en français, de façon claire et concise. "
-                       . "Voici le contexte financier actuel de l'utilisateur :\n\n{$context}",
+            'content' => "Tu es un assistant financier intégré dans CASHtoCASH. Réponds toujours en français, de façon claire et concise. Voici le contexte financier actuel de l'utilisateur :\n\n{$context}",
         ]];
 
         // Append sanitised conversation history (last 6 turns max)
@@ -209,14 +207,19 @@ class AiController
 
         $result = curl_exec($ch);
         $error  = curl_error($ch);
-        curl_close($ch);
 
         if ($error !== '') {
-            error_log('[AiController] Ollama curl error: ' . $error);
+            error_log("[AiController] Ollama curl error: $error");
             return "Désolé, je ne peux pas répondre pour le moment. Vérifiez que le service IA est démarré.";
         }
 
         $data = json_decode((string) $result, true);
+
+        if (!empty($data['error'])) {
+            error_log("[AiController] Ollama error: {$data['error']}");
+            return "L'assistant IA est temporairement indisponible. ({$data['error']})";
+        }
+
         return (string) ($data['message']['content']
             ?? "Désolé, je n'ai pas pu traiter votre demande.");
     }
